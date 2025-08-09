@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MagicLuck - Marketplace</title>
+  <title>Zyberon - Marketplace</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Configuração do Dark Mode com cores mais escuras -->
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -13,15 +12,19 @@
         extend: {
           colors: {
             dark: {
-              900: '#0A0A0A',  // Fundo quase preto
-              800: '#121212',  // Fundo escuro
-              700: '#1E1E1E',  // Cards/sidebar
-              600: '#2A2A2A',  // Elementos
-              500: '#3D3D3D',  // Bordas
-              400: '#5E5E5E',  // Texto secundário
-              300: '#9E9E9E',  // Texto principal
-              200: '#D1D1D1',  // Texto destacado
-              100: '#FFFFFF'   // Texto branco
+              900: '#0A0A0A',
+              800: '#121212',
+              700: '#1E1E1E',
+              600: '#2A2A2A',
+              500: '#3D3D3D',
+              400: '#5E5E5E',
+              300: '#9E9E9E',
+              200: '#D1D1D1',
+              100: '#FFFFFF'
+            },
+            purple: {
+              600: '#7C3AED',
+              700: '#6D28D9'
             }
           }
         }
@@ -30,9 +33,7 @@
   </script>
   <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
   <style>
-    .rotate-180 {
-      transform: rotate(180deg);
-    }
+    .rotate-180 { transform: rotate(180deg); }
     .hover-underline::after {
       content: '';
       position: absolute;
@@ -43,14 +44,12 @@
       background-color: currentColor;
       transition: width 0.3s ease;
     }
-    .hover-underline:hover::after {
-      width: 100%;
-    }
+    .hover-underline:hover::after { width: 100%; }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-dark-900">
   <div class="flex h-screen">
-    <!-- Sidebar com cores escuras intensas -->
+    <!-- Sidebar -->
     <aside id="sidebar" class="bg-white dark:bg-dark-800 w-64 min-h-screen flex flex-col shadow-lg fixed top-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
       <!-- Logo -->
       <div class="p-6 text-2xl font-bold text-black dark:text-dark-100 flex justify-between items-center">
@@ -112,23 +111,24 @@
     <!-- Overlay -->
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 md:hidden"></div>
 
-    <!-- Conteúdo principal com dark mode intenso -->
+    <!-- Conteúdo principal -->
     <main class="flex-1 p-6 w-full md:ml-64">
       <button id="menu-btn" class="md:hidden mb-4 p-2" aria-label="Abrir menu">
         <i class="ri-menu-line text-3xl text-gray-800 dark:text-dark-100"></i>
       </button>
 
-      <h1 class="text-3xl font-bold dark:text-dark-100 mb-2">Marketplace</h1>
-      <p class="text-gray-600 dark:text-dark-400 mb-6">Compre ovos mágicos para sua coleção</p>
+      <h1 class="text-2xl font-bold dark:text-dark-100 mb-2">Marketplace</h1>
+      <p class="text-sm text-gray-600 dark:text-dark-400 mb-4">Compre ovos mágicos para sua coleção</p>
 
-      <!-- Tabela de Ovos com cores escuras -->
+      <!-- Tabela de Ovos Simplificada -->
       <div class="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-dark-600">
-        <div class="px-6 py-3 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700">
+        <div class="px-4 py-2 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-500 dark:text-dark-400">Mercado de Ovos</span>
-            <span class="text-sm font-medium text-gray-500 dark:text-dark-400 flex items-center">
-              <i class="ri-coin-fill"></i>
-            </span>
+            <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Mercado de Ovos • 6 tipos</span>
+            <div class="flex items-center">
+              <i class="ri-coin-fill text-purple-500 mr-1 text-sm"></i>
+              <span class="text-xs font-medium text-purple-600 dark:text-purple-400">1,250 créditos</span>
+            </div>
           </div>
         </div>
 
@@ -136,131 +136,157 @@
           <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-600">
             <thead class="bg-gray-50 dark:bg-dark-700">
               <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ovo</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Preço</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Variação</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Raridade</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ação</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ovo</th>
+                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Raridade</th>
+                <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ação</th>
               </tr>
             </thead>
             <tbody class="bg-white dark:bg-dark-800 divide-y divide-gray-200 dark:divide-dark-600">
-              <!-- Ovo Dourado -->
+              <!-- Ovo Comum -->
               <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
-                      <i class="ri-egg-fill text-xl text-yellow-500 dark:text-yellow-400"></i>
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-green-100 dark:bg-green-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-green-500 dark:text-green-400"></i>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Dourado</div>
-                      <div class="text-sm text-gray-500 dark:text-dark-400">Dragão Alado</div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Terrestre</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Tartaruga Mística</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
-                  $2.42
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                    Comum
+                  </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
-                  +13.38%
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    Comprar
+                  </button>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+              </tr>
+
+              <!-- Ovo Incomum -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Aquático</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Serpente Marinha</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                    Incomum
+                  </span>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    Comprar
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Ovo Raro -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-yellow-500 dark:text-yellow-400"></i>
+                    </div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Solar</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Fênix Renascida</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3 whitespace-nowrap">
                   <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
                     Raro
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
                     Comprar
                   </button>
                 </td>
               </tr>
-              
-              <!-- Ovo Cristal -->
+
+              <!-- Ovo Épico -->
               <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-purple-100 dark:bg-purple-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-purple-500 dark:text-purple-400"></i>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
-                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Lunar</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Dragão Noturno</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
-                  $7.48
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
-                  +11.90%
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
                     Épico
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
                     Comprar
                   </button>
                 </td>
               </tr>
-              <!-- Ovo Cristal -->
+
+              <!-- Ovo Lendário -->
               <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-red-100 dark:bg-red-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-red-500 dark:text-red-400"></i>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
-                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Flamejante</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Dragão Vulcânico</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
-                  $7.48
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
-                  +11.90%
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                    Épico
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                    Lendário
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
                     Comprar
                   </button>
                 </td>
               </tr>
-              <!-- Ovo Cristal -->
+
+              <!-- Ovo Celestial -->
               <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-4 py-3 whitespace-nowrap">
                   <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
-                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    <div class="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/20 rounded-full">
+                      <i class="ri-egg-fill text-lg text-indigo-500 dark:text-indigo-400"></i>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
-                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    <div class="ml-3">
+                      <div class="text-xs font-medium text-gray-900 dark:text-dark-100">Ovo Cósmico</div>
+                      <div class="text-xs text-gray-500 dark:text-dark-400">Deus Estelar</div>
                     </div>
                   </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
-                  $7.48
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
-                  +11.90%
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
-                    Épico
+                <td class="px-4 py-3 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
+                    Celestial
                   </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
+                  <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
                     Comprar
                   </button>
                 </td>
@@ -273,7 +299,7 @@
   </div>
 
   <script>
-    // Menu Mobile (original)
+    // Menu Mobile
     const menuBtn = document.getElementById("menu-btn");
     const closeBtn = document.getElementById("close-btn");
     const sidebar = document.getElementById("sidebar");
@@ -293,7 +319,7 @@
     closeBtn.addEventListener("click", closeSidebar);
     overlay.addEventListener("click", closeSidebar);
 
-    // Dark Mode (original)
+    // Dark Mode
     const darkModeToggle = document.getElementById("sidebar-dark-mode-toggle");
     const darkModeIcon = document.getElementById("sidebar-dark-mode-icon");
     const html = document.documentElement;
@@ -321,7 +347,7 @@
       }
     });
 
-    // Submenu Settings (original)
+    // Submenu Settings
     const settingsToggle = document.getElementById("settings-toggle");
     const settingsSubmenu = document.getElementById("settings-submenu");
     const settingsArrow = document.getElementById("settings-arrow");
@@ -341,6 +367,4 @@
     });
   </script>
 </body>
-
 </html>
-
