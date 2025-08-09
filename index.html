@@ -113,23 +113,25 @@
 
     <!-- Conteúdo principal -->
     <main class="flex-1 p-6 w-full md:ml-64">
-      <button id="menu-btn" class="md:hidden mb-4 p-2" aria-label="Abrir menu">
-        <i class="ri-menu-line text-3xl text-gray-800 dark:text-dark-100"></i>
-      </button>
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <button id="menu-btn" class="md:hidden p-2 mr-2" aria-label="Abrir menu">
+            <i class="ri-menu-line text-2xl text-gray-800 dark:text-dark-100"></i>
+          </button>
+          <h1 class="text-2xl font-bold dark:text-dark-100 inline-block">Marketplace</h1>
+        </div>
+        <div class="bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full flex items-center">
+          <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+          <span class="text-sm font-medium text-purple-600 dark:text-purple-400">1,250</span>
+        </div>
+      </div>
 
-      <h1 class="text-2xl font-bold dark:text-dark-100 mb-2">Marketplace</h1>
       <p class="text-sm text-gray-600 dark:text-dark-400 mb-4">Compre ovos mágicos para sua coleção</p>
 
       <!-- Tabela de Ovos Simplificada -->
       <div class="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-dark-600">
         <div class="px-4 py-2 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Mercado de Ovos • 6 tipos</span>
-            <div class="flex items-center">
-              <i class="ri-coin-fill text-purple-500 mr-1 text-sm"></i>
-              <span class="text-xs font-medium text-purple-600 dark:text-purple-400">1,250 créditos</span>
-            </div>
-          </div>
+          <span class="text-xs font-medium text-gray-500 dark:text-dark-400">Mercado de Ovos • 6 tipos</span>
         </div>
 
         <div class="overflow-x-auto">
