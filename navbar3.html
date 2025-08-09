@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MagicLuck - Marketplace</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Configuração do Dark Mode com cores mais escuras -->
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              900: '#0A0A0A',  // Fundo quase preto
+              800: '#121212',  // Fundo escuro
+              700: '#1E1E1E',  // Cards/sidebar
+              600: '#2A2A2A',  // Elementos
+              500: '#3D3D3D',  // Bordas
+              400: '#5E5E5E',  // Texto secundário
+              300: '#9E9E9E',  // Texto principal
+              200: '#D1D1D1',  // Texto destacado
+              100: '#FFFFFF'   // Texto branco
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    .rotate-180 {
+      transform: rotate(180deg);
+    }
+    .hover-underline::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: currentColor;
+      transition: width 0.3s ease;
+    }
+    .hover-underline:hover::after {
+      width: 100%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-dark-900">
+  <div class="flex h-screen">
+    <!-- Sidebar com cores escuras intensas -->
+    <aside id="sidebar" class="bg-white dark:bg-dark-800 w-64 min-h-screen flex flex-col shadow-lg fixed top-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
+      <!-- Logo -->
+      <div class="p-6 text-2xl font-bold text-black dark:text-dark-100 flex justify-between items-center">
+        Zyberon
+        <button id="close-btn" class="md:hidden p-2">
+          <i class="ri-close-line text-gray-600 dark:text-dark-400 w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- Menu -->
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-dark-700 text-black dark:text-dark-100 font-medium">
+          <i class="ri-store-line text-xl"></i>
+          Marketplace
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+          <i class="ri-lightbulb-line text-xl"></i>
+          Encubadora 
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+          <i class="ri-capsule-line text-xl"></i>
+          Meus ovos
+        </a>          
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+          <i class="ri-sword-line text-xl"></i>
+          Batalhas
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+          <i class="ri-gift-line text-xl"></i>
+          Itens para jogo
+        </a>
+      </nav>
+
+      <!-- Bottom Menu -->
+      <div class="mt-auto px-4 space-y-2 mb-6">
+        <!-- Settings com Submenu -->
+        <div class="relative">
+          <a href="#" id="settings-toggle" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+            <i class="ri-settings-3-line text-xl"></i>
+            Settings
+            <i id="settings-arrow" class="ri-arrow-down-s-line ml-auto transition-transform duration-200"></i>
+          </a>
+          <div id="settings-submenu" class="hidden pl-4 mt-1 space-y-1">
+            <a href="#" class="block px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600">Perfil</a>
+            <a href="#" id="sidebar-dark-mode-toggle" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600">
+              <i id="sidebar-dark-mode-icon" class="ri-moon-line text-xl"></i>
+              Dark Mode
+            </a>
+          </div>
+        </div>
+        
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+          <i class="ri-logout-box-line text-xl"></i>
+          Log out
+        </a>
+      </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 md:hidden"></div>
+
+    <!-- Conteúdo principal com dark mode intenso -->
+    <main class="flex-1 p-6 w-full md:ml-64">
+      <button id="menu-btn" class="md:hidden mb-4 p-2" aria-label="Abrir menu">
+        <i class="ri-menu-line text-3xl text-gray-800 dark:text-dark-100"></i>
+      </button>
+
+      <h1 class="text-3xl font-bold dark:text-dark-100 mb-2">Marketplace</h1>
+      <p class="text-gray-600 dark:text-dark-400 mb-6">Compre ovos mágicos para sua coleção</p>
+
+      <!-- Tabela de Ovos com cores escuras -->
+      <div class="bg-white dark:bg-dark-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-dark-600">
+        <div class="px-6 py-3 border-b border-gray-200 dark:border-dark-600 bg-gray-50 dark:bg-dark-700">
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-500 dark:text-dark-400">Mercado de Ovos</span>
+            <span class="text-sm font-medium text-red-500 dark:text-red-400 flex items-center">
+              <i class="ri-arrow-down-line mr-1"></i> 0.80%
+            </span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-dark-600">
+            <thead class="bg-gray-50 dark:bg-dark-700">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ovo</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Preço</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Variação</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Raridade</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-400 uppercase tracking-wider">Ação</th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-dark-800 divide-y divide-gray-200 dark:divide-dark-600">
+              <!-- Ovo Dourado -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-yellow-100 dark:bg-yellow-900/20 rounded-full">
+                      <i class="ri-egg-fill text-xl text-yellow-500 dark:text-yellow-400"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Dourado</div>
+                      <div class="text-sm text-gray-500 dark:text-dark-400">Dragão Alado</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
+                  $2.42
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
+                  +13.38%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                    Raro
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                    Comprar
+                  </button>
+                </td>
+              </tr>
+              
+              <!-- Ovo Cristal -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
+                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
+                  $7.48
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
+                  +11.90%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                    Épico
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                    Comprar
+                  </button>
+                </td>
+              </tr>
+              <!-- Ovo Cristal -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
+                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
+                  $7.48
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
+                  +11.90%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                    Épico
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                    Comprar
+                  </button>
+                </td>
+              </tr>
+              <!-- Ovo Cristal -->
+              <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100 dark:bg-blue-900/20 rounded-full">
+                      <i class="ri-egg-fill text-xl text-blue-500 dark:text-blue-400"></i>
+                    </div>
+                    <div class="ml-4">
+                      <div class="text-sm font-medium text-gray-900 dark:text-dark-100">Ovo Cristal</div>
+                      <div class="text-sm text-gray-500 dark:text-dark-400">Fênix de Gelo</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-dark-100">
+                  $7.48
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-green-500 dark:text-green-400">
+                  +11.90%
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                    Épico
+                  </span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button class="text-indigo-600 dark:text-indigo-400 hover-underline relative">
+                    Comprar
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Menu Mobile (original)
+    const menuBtn = document.getElementById("menu-btn");
+    const closeBtn = document.getElementById("close-btn");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+
+    function openSidebar() {
+      sidebar.classList.remove("-translate-x-full");
+      overlay.classList.remove("hidden");
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+    }
+
+    menuBtn.addEventListener("click", openSidebar);
+    closeBtn.addEventListener("click", closeSidebar);
+    overlay.addEventListener("click", closeSidebar);
+
+    // Dark Mode (original)
+    const darkModeToggle = document.getElementById("sidebar-dark-mode-toggle");
+    const darkModeIcon = document.getElementById("sidebar-dark-mode-icon");
+    const html = document.documentElement;
+
+    // Verificar preferência salva ou do sistema
+    const savedMode = localStorage.getItem("darkMode");
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    if (savedMode === "true" || (!savedMode && systemPrefersDark)) {
+      html.classList.add("dark");
+      darkModeIcon.classList.replace("ri-moon-line", "ri-sun-line");
+    }
+
+    // Toggle Dark Mode
+    darkModeToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      html.classList.toggle("dark");
+
+      if (html.classList.contains("dark")) {
+        darkModeIcon.classList.replace("ri-moon-line", "ri-sun-line");
+        localStorage.setItem("darkMode", "true");
+      } else {
+        darkModeIcon.classList.replace("ri-sun-line", "ri-moon-line");
+        localStorage.setItem("darkMode", "false");
+      }
+    });
+
+    // Submenu Settings (original)
+    const settingsToggle = document.getElementById("settings-toggle");
+    const settingsSubmenu = document.getElementById("settings-submenu");
+    const settingsArrow = document.getElementById("settings-arrow");
+
+    settingsToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      settingsSubmenu.classList.toggle("hidden");
+      settingsArrow.classList.toggle("rotate-180");
+    });
+
+    // Fechar ao clicar fora
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#settings-toggle") && !e.target.closest("#settings-submenu")) {
+        settingsSubmenu.classList.add("hidden");
+        settingsArrow.classList.remove("rotate-180");
+      }
+    });
+  </script>
+</body>
+</html>
