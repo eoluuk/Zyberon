@@ -121,6 +121,21 @@
     .purchase-success {
       animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     }
+
+    /* Loading spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-dark-900">
@@ -174,8 +189,9 @@
           <button id="modal-cancel" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-dark-600 text-gray-800 dark:text-dark-200 rounded-md hover:bg-gray-300 dark:hover:bg-dark-500 transition">
             Cancelar
           </button>
-          <button id="modal-confirm" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
-            Confirmar Compra
+          <button id="modal-confirm" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition flex items-center justify-center">
+            <span id="confirm-text">Confirmar Compra</span>
+            <span id="confirm-spinner" class="loading-spinner hidden ml-2"></span>
           </button>
         </div>
       </div>
@@ -202,14 +218,15 @@
           <i class="ri-store-line text-xl"></i>
           Marketplace
         </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+        <a href="./encubadora.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
           <i class="ri-lightbulb-line text-xl"></i>
           Encubadora 
+          <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
         </a>
         <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
           <i class="ri-capsule-line text-xl"></i>
           Meus ovos
-          <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+          
         </a>          
         <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
           <i class="ri-sword-line text-xl"></i>
@@ -648,10 +665,217 @@
   </div>
 
   <script>
+    // Configuração do JSONBin - SUBSTITUA COM SEUS DADOS
+    const JSONBIN_CONFIG = {
+      BIN_ID: '689845a243b1c97be91ac96f',
+      API_KEY: '$2a$10$qWJ.6NokTFFRL/IaIiPDIuIXijBh53tAL4tHoI4nk3iO1RFwcjS9.', 
+      BASE_URL: 'https://api.jsonbin.io/v3/b'
+    };
+
     // Sistema de dados
     const gameData = {
       coins: 1250,
-      inventory: []
+      inventory: [],
+      version: '1.0.0',
+      settings: {
+        darkMode: false,
+        soundEnabled: true
+      }
+    };
+
+    // Sistema de áudio simplificado
+    const audioSystem = {
+      enabled: true,
+      volume: 0.2,
+      
+      // Create audio context for better sound generation
+      createBeep(frequency, duration, volume = 0.1, type = 'sine') {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+        oscillator.type = type;
+        
+        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+        gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+        gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + duration);
+        
+        return new Promise(resolve => {
+          setTimeout(resolve, duration * 1000);
+        });
+      },
+      
+      // Play money/coin sound for purchases
+      async playMoneySound() {
+        if (!this.enabled) return;
+        
+        try {
+          // Som de dinheiro/moedas caindo
+          this.createBeep(800, 0.1, 0.3, 'square');
+          setTimeout(() => this.createBeep(900, 0.1, 0.25, 'square'), 50);
+          setTimeout(() => this.createBeep(1000, 0.1, 0.2, 'square'), 100);
+          setTimeout(() => this.createBeep(850, 0.15, 0.15, 'square'), 150);
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      },
+      
+      // Play error sound
+      async playErrorSound() {
+        if (!this.enabled) return;
+        
+        try {
+          await this.createBeep(200, 0.1, 0.3, 'square');
+          await this.createBeep(150, 0.2, 0.25, 'square');
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      },
+      
+      // Play UI click sound
+      async playClickSound() {
+        if (!this.enabled) return;
+        
+        try {
+          await this.createBeep(600, 0.05, 0.15, 'square');
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      }
+    };
+
+    // Funções para integração com JSONBin
+    const jsonbinService = {
+      async saveGameData() {
+        try {
+          const spinner = document.getElementById('confirm-spinner');
+          const confirmText = document.getElementById('confirm-text');
+          
+          if (spinner && confirmText) {
+            spinner.classList.remove('hidden');
+            confirmText.textContent = 'Salvando...';
+          }
+          
+          const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': JSONBIN_CONFIG.API_KEY,
+              'X-Bin-Versioning': 'false'
+            },
+            body: JSON.stringify(gameData)
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to save data');
+          }
+          
+          console.log('Game data saved to JSONBin');
+          
+          if (spinner && confirmText) {
+            spinner.classList.add('hidden');
+            confirmText.textContent = 'Confirmar Compra';
+          }
+          
+          return true;
+        } catch (error) {
+          console.error('Error saving to JSONBin:', error);
+          
+          // Fallback to localStorage
+          try {
+            localStorage.setItem('zyberonGameData', JSON.stringify(gameData));
+            console.log('Saved to localStorage as fallback');
+            return true;
+          } catch (e) {
+            console.error('Failed to save to localStorage:', e);
+            return false;
+          }
+        }
+      },
+      
+      async loadGameData() {
+        try {
+          // Mostrar loading state se necessário
+          
+          const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+            headers: {
+              'X-Master-Key': JSONBIN_CONFIG.API_KEY
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to load data');
+          }
+          
+          const data = await response.json();
+          
+          if (data.record) {
+            // Verifica se a versão é compatível
+            if (data.record.version === gameData.version) {
+              Object.assign(gameData, data.record);
+              console.log('Game data loaded from JSONBin');
+              
+              // Aplicar configurações carregadas
+              if (gameData.settings.darkMode) {
+                document.documentElement.classList.add('dark');
+                const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+                if (darkModeIcon) {
+                  darkModeIcon.classList.remove('ri-moon-line');
+                  darkModeIcon.classList.add('ri-sun-line');
+                }
+              }
+              
+              audioSystem.enabled = gameData.settings.soundEnabled;
+              
+              return true;
+            } else {
+              console.warn('Version mismatch, using default data');
+              return false;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading from JSONBin:', error);
+          
+          // Fallback to localStorage
+          try {
+            const savedData = localStorage.getItem('zyberonGameData');
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              
+              // Verificar versão do localStorage também
+              if (parsedData.version === gameData.version) {
+                Object.assign(gameData, parsedData);
+                console.log('Game data loaded from localStorage');
+                
+                // Aplicar configurações
+                if (gameData.settings.darkMode) {
+                  document.documentElement.classList.add('dark');
+                  const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+                  if (darkModeIcon) {
+                    darkModeIcon.classList.remove('ri-moon-line');
+                    darkModeIcon.classList.add('ri-sun-line');
+                  }
+                }
+                
+                audioSystem.enabled = gameData.settings.soundEnabled;
+                
+                return true;
+              }
+            }
+            return false;
+          } catch (e) {
+            console.error('Failed to load from localStorage:', e);
+            return false;
+          }
+        }
+      }
     };
 
     // Elementos DOM
@@ -709,6 +933,11 @@
 
       toastContainer.appendChild(toast);
       
+      // Play sound based on type
+      if (type === 'error') {
+        audioSystem.playErrorSound();
+      }
+      
       // Trigger animation
       setTimeout(() => toast.classList.add('show'), 100);
       
@@ -720,6 +949,8 @@
     }
 
     function showModal(eggData) {
+      audioSystem.playClickSound(); // UI click sound
+      
       currentEggData = eggData;
       const price = parseInt(eggData.price);
       const remaining = gameData.coins - price;
@@ -738,11 +969,11 @@
       if (remaining >= 0) {
         modalRemainingCoins.className = "font-medium text-green-600 dark:text-green-400";
         modalConfirm.disabled = false;
-        modalConfirm.className = "flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition";
+        modalConfirm.className = "flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition flex items-center justify-center";
       } else {
         modalRemainingCoins.className = "font-medium text-red-600 dark:text-red-400";
         modalConfirm.disabled = true;
-        modalConfirm.className = "flex-1 px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed";
+        modalConfirm.className = "flex-1 px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed flex items-center justify-center";
       }
       
       purchaseModal.classList.remove('hidden');
@@ -753,9 +984,17 @@
       purchaseModal.classList.add('hidden');
       document.body.style.overflow = '';
       currentEggData = null;
+      
+      // Reset modal button state
+      const spinner = document.getElementById('confirm-spinner');
+      const confirmText = document.getElementById('confirm-text');
+      if (spinner && confirmText) {
+        spinner.classList.add('hidden');
+        confirmText.textContent = 'Confirmar Compra';
+      }
     }
 
-    function processPurchase() {
+    async function processPurchase() {
       if (!currentEggData) return;
       
       const price = parseInt(currentEggData.price);
@@ -781,9 +1020,11 @@
       
       gameData.inventory.push(eggItem);
       
+      // Play money sound for all purchases
+      audioSystem.playMoneySound();
+      
       // Update UI
       updateUI();
-      hideModal();
       
       // Show success message
       showToast(`${currentEggData.name} adicionado ao seu inventário!`, 'success');
@@ -796,25 +1037,26 @@
       inventoryCountElement.classList.add('purchase-success');
       setTimeout(() => inventoryCountElement.classList.remove('purchase-success'), 600);
       
-      // Save to localStorage (optional - for persistence)
-      try {
-        localStorage.setItem('zyberonGameData', JSON.stringify(gameData));
-      } catch (e) {
-        console.log('Could not save to localStorage');
+      // Save to JSONBin (and fallback to localStorage if fails)
+      const saved = await jsonbinService.saveGameData();
+      
+      if (saved) {
+        hideModal();
+      } else {
+        showToast('Compra realizada, mas houve um problema ao salvar. Seus dados podem não persistir.', 'error');
+        hideModal();
       }
     }
 
     // Event Listeners
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', async function() {
       // Load saved data
-      try {
-        const savedData = localStorage.getItem('zyberonGameData');
-        if (savedData) {
-          Object.assign(gameData, JSON.parse(savedData));
-          updateUI();
-        }
-      } catch (e) {
-        console.log('Could not load from localStorage');
+      const loaded = await jsonbinService.loadGameData();
+      if (loaded) {
+        updateUI();
+      } else {
+        // Use default data
+        updateUI();
       }
       
       // Purchase buttons
@@ -841,7 +1083,10 @@
       });
       
       // Modal event listeners
-      modalCancel.addEventListener('click', hideModal);
+      modalCancel.addEventListener('click', () => {
+        audioSystem.playClickSound();
+        hideModal();
+      });
       modalConfirm.addEventListener('click', processPurchase);
       
       // Click outside to close modal
@@ -877,74 +1122,87 @@
       document.body.style.overflow = '';
     }
 
-    menuBtn.addEventListener("click", openSidebar);
-    closeBtn.addEventListener("click", closeSidebar);
-    overlay.addEventListener("click", closeSidebar);
+    if (menuBtn) menuBtn.addEventListener("click", openSidebar);
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (overlay) overlay.addEventListener("click", closeSidebar);
 
     // Dark Mode
     const darkModeToggle = document.getElementById("sidebar-dark-mode-toggle");
     const darkModeIcon = document.getElementById("sidebar-dark-mode-icon");
     const html = document.documentElement;
 
-    // Check saved preference or system preference
-    const savedMode = localStorage.getItem("darkMode");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-    if (savedMode === "true" || (!savedMode && systemPrefersDark)) {
-      html.classList.add("dark");
-      darkModeIcon.classList.replace("ri-moon-line", "ri-sun-line");
-    }
-
     // Toggle Dark Mode
-    darkModeToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      html.classList.toggle("dark");
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        html.classList.toggle("dark");
 
-      if (html.classList.contains("dark")) {
-        darkModeIcon.classList.replace("ri-moon-line", "ri-sun-line");
-        localStorage.setItem("darkMode", "true");
-      } else {
-        darkModeIcon.classList.replace("ri-sun-line", "ri-moon-line");
-        localStorage.setItem("darkMode", "false");
-      }
-    });
+        if (html.classList.contains("dark")) {
+          if (darkModeIcon) {
+            darkModeIcon.classList.remove("ri-moon-line");
+            darkModeIcon.classList.add("ri-sun-line");
+          }
+          gameData.settings.darkMode = true;
+        } else {
+          if (darkModeIcon) {
+            darkModeIcon.classList.remove("ri-sun-line");
+            darkModeIcon.classList.add("ri-moon-line");
+          }
+          gameData.settings.darkMode = false;
+        }
+        
+        // Save settings
+        jsonbinService.saveGameData();
+      });
+    }
 
     // Settings Submenu
     const settingsToggle = document.getElementById("settings-toggle");
     const settingsSubmenu = document.getElementById("settings-submenu");
     const settingsArrow = document.getElementById("settings-arrow");
 
-    settingsToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      settingsSubmenu.classList.toggle("hidden");
-      settingsArrow.classList.toggle("rotate-180");
-    });
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+       
+        if (settingsSubmenu) settingsSubmenu.classList.toggle("hidden");
+        if (settingsArrow) settingsArrow.classList.toggle("rotate-180");
+      });
+    }
 
-    // Close when clicking outside
+    // Close when clicking outside settings
     document.addEventListener("click", (e) => {
       if (!e.target.closest("#settings-toggle") && !e.target.closest("#settings-submenu")) {
-        settingsSubmenu.classList.add("hidden");
-        settingsArrow.classList.remove("rotate-180");
+        if (settingsSubmenu) settingsSubmenu.classList.add("hidden");
+        if (settingsArrow) settingsArrow.classList.remove("rotate-180");
       }
     });
 
-    // View Toggle
+    // View Toggle (SEM SOM)
     const viewToggle = document.getElementById("view-toggle");
     const viewIcon = document.getElementById("view-icon");
     const tableView = document.getElementById("table-view");
     const cardsView = document.getElementById("cards-view");
 
-    viewToggle.addEventListener("click", () => {
-      tableView.classList.toggle("hidden");
-      cardsView.classList.toggle("hidden");
-      
-      // Toggle icon
-      if (tableView.classList.contains("hidden")) {
-        viewIcon.classList.replace("ri-table-line", "ri-layout-grid-line");
-      } else {
-        viewIcon.classList.replace("ri-layout-grid-line", "ri-table-line");
-      }
-    });
+    if (viewToggle) {
+      viewToggle.addEventListener("click", () => {
+        // Removido o som aqui
+        
+        if (tableView) tableView.classList.toggle("hidden");
+        if (cardsView) cardsView.classList.toggle("hidden");
+        
+        // Toggle icon
+        if (viewIcon) {
+          if (tableView && tableView.classList.contains("hidden")) {
+            viewIcon.classList.remove("ri-table-line");
+            viewIcon.classList.add("ri-layout-grid-line");
+          } else {
+            viewIcon.classList.remove("ri-layout-grid-line");
+            viewIcon.classList.add("ri-table-line");
+          }
+        }
+      });
+    }
   </script>
 </body>
 </html>
