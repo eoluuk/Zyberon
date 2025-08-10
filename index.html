@@ -29,6 +29,25 @@
           },
           animation: {
             'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'fade-in': 'fadeIn 0.3s ease-in',
+          },
+          keyframes: {
+            bounceIn: {
+              '0%': { transform: 'scale(0.3)', opacity: '0' },
+              '50%': { transform: 'scale(1.05)', opacity: '0.8' },
+              '70%': { transform: 'scale(0.9)', opacity: '0.9' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            }
           }
         }
       }
@@ -67,9 +86,102 @@
     .egg-card:hover img {
       transform: scale(1.1);
     }
+    
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 300px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    /* Modal Backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(4px);
+    }
+    
+    /* Button pulse effect */
+    .btn-pulse {
+      animation: pulse 0.5s;
+    }
+    
+    /* Coin animation */
+    .coin-bounce {
+      animation: bounce 0.5s;
+    }
+    
+    /* Purchase success animation */
+    .purchase-success {
+      animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-dark-900">
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Modal de Confirmação de Compra -->
+  <div id="purchase-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-dark-800 rounded-lg shadow-xl max-w-md w-full animate-bounce-in">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div id="modal-egg-icon" class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full mr-4">
+            <img id="modal-egg-image" src="" class="h-10 w-10" alt="">
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-dark-100" id="modal-egg-name"></h3>
+            <p class="text-sm text-gray-600 dark:text-dark-400" id="modal-egg-description"></p>
+          </div>
+        </div>
+        
+        <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Preço:</span>
+            <div class="flex items-center">
+              <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+              <span class="font-medium text-gray-900 dark:text-dark-100" id="modal-egg-price"></span>
+            </div>
+          </div>
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Suas moedas:</span>
+            <div class="flex items-center">
+              <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+              <span class="font-medium text-gray-900 dark:text-dark-100" id="modal-current-coins"></span>
+            </div>
+          </div>
+          <hr class="border-gray-200 dark:border-dark-600 my-2">
+          <div class="flex justify-between items-center">
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-300">Após compra:</span>
+            <div class="flex items-center">
+              <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+              <span class="font-medium" id="modal-remaining-coins"></span>
+            </div>
+          </div>
+        </div>
+        
+        <p class="text-sm text-gray-600 dark:text-dark-400 mb-6">
+          Confirma a compra deste ovo? Ele será adicionado ao seu inventário.
+        </p>
+        
+        <div class="flex space-x-3">
+          <button id="modal-cancel" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-dark-600 text-gray-800 dark:text-dark-200 rounded-md hover:bg-gray-300 dark:hover:bg-dark-500 transition">
+            Cancelar
+          </button>
+          <button id="modal-confirm" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+            Confirmar Compra
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="flex h-screen">
     <!-- Sidebar -->
     <aside id="sidebar" class="bg-white dark:bg-dark-800 w-64 min-h-screen flex flex-col shadow-lg fixed top-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
@@ -97,6 +209,7 @@
         <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
           <i class="ri-capsule-line text-xl"></i>
           Meus ovos
+          <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
         </a>          
         <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
           <i class="ri-sword-line text-xl"></i>
@@ -147,7 +260,7 @@
         </div>
         <div class="bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full flex items-center">
           <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
-          <span class="text-sm font-medium text-purple-600 dark:text-purple-400">1,250</span>
+          <span class="text-sm font-medium text-purple-600 dark:text-purple-400" id="user-coins">1,250</span>
         </div>
       </div>
 
@@ -195,7 +308,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs" 
+                            data-egg-id="terrestre"
+                            data-egg-name="Ovo Terrestre" 
+                            data-egg-description="Tartaruga Mística" 
+                            data-egg-price="50" 
+                            data-egg-rarity="Comum" 
+                            data-egg-image="./img/ovo1.png"
+                            data-egg-bg="bg-green-100 dark:bg-green-900/20">
                       Comprar <span class="md:hidden">• 50</span>
                     </button>
                   </td>
@@ -220,7 +340,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs"
+                            data-egg-id="aquatico"
+                            data-egg-name="Ovo Aquático" 
+                            data-egg-description="Serpente Marinha" 
+                            data-egg-price="100" 
+                            data-egg-rarity="Incomum" 
+                            data-egg-image="./img/ovo2.png"
+                            data-egg-bg="bg-blue-100 dark:bg-blue-900/20">
                       Comprar <span class="md:hidden">• 100</span>
                     </button>
                   </td>
@@ -245,7 +372,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs"
+                            data-egg-id="solar"
+                            data-egg-name="Ovo Solar" 
+                            data-egg-description="Fênix Renascida" 
+                            data-egg-price="200" 
+                            data-egg-rarity="Raro" 
+                            data-egg-image="./img/ovo3.png"
+                            data-egg-bg="bg-yellow-100 dark:bg-yellow-900/20">
                       Comprar <span class="md:hidden">• 200</span>
                     </button>
                   </td>
@@ -270,7 +404,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs"
+                            data-egg-id="lunar"
+                            data-egg-name="Ovo Lunar" 
+                            data-egg-description="Dragão Noturno" 
+                            data-egg-price="350" 
+                            data-egg-rarity="Épico" 
+                            data-egg-image="./img/ovo4.png"
+                            data-egg-bg="bg-purple-100 dark:bg-purple-900/20">
                       Comprar <span class="md:hidden">• 350</span>
                     </button>
                   </td>
@@ -295,7 +436,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs"
+                            data-egg-id="flamejante"
+                            data-egg-name="Ovo Flamejante" 
+                            data-egg-description="Dragão Vulcânico" 
+                            data-egg-price="500" 
+                            data-egg-rarity="Lendário" 
+                            data-egg-image="./img/ovo5.png"
+                            data-egg-bg="bg-red-100 dark:bg-red-900/20">
                       Comprar <span class="md:hidden">• 500</span>
                     </button>
                   </td>
@@ -320,7 +468,14 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 whitespace-nowrap text-right text-xs font-medium">
-                    <button class="px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs">
+                    <button class="buy-btn px-2 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-xs"
+                            data-egg-id="cosmico"
+                            data-egg-name="Ovo Cósmico" 
+                            data-egg-description="Deus Estelar" 
+                            data-egg-price="1000" 
+                            data-egg-rarity="Celestial" 
+                            data-egg-image="./img/ovo6.png"
+                            data-egg-bg="bg-indigo-100 dark:bg-indigo-900/20">
                       Comprar <span class="md:hidden">• 1,000</span>
                     </button>
                   </td>
@@ -345,7 +500,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                 Comum
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="terrestre"
+                      data-egg-name="Ovo Terrestre" 
+                      data-egg-description="Tartaruga Mística" 
+                      data-egg-price="50" 
+                      data-egg-rarity="Comum" 
+                      data-egg-image="./img/ovo1.png"
+                      data-egg-bg="bg-green-100 dark:bg-green-900/20">
                 Comprar • 50
               </button>
             </div>
@@ -364,7 +526,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
                 Incomum
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="aquatico"
+                      data-egg-name="Ovo Aquático" 
+                      data-egg-description="Serpente Marinha" 
+                      data-egg-price="100" 
+                      data-egg-rarity="Incomum" 
+                      data-egg-image="./img/ovo2.png"
+                      data-egg-bg="bg-blue-100 dark:bg-blue-900/20">
                 Comprar • 100
               </button>
             </div>
@@ -383,7 +552,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
                 Raro
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="solar"
+                      data-egg-name="Ovo Solar" 
+                      data-egg-description="Fênix Renascida" 
+                      data-egg-price="200" 
+                      data-egg-rarity="Raro" 
+                      data-egg-image="./img/ovo3.png"
+                      data-egg-bg="bg-yellow-100 dark:bg-yellow-900/20">
                 Comprar • 200
               </button>
             </div>
@@ -402,7 +578,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
                 Épico
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="lunar"
+                      data-egg-name="Ovo Lunar" 
+                      data-egg-description="Dragão Noturno" 
+                      data-egg-price="350" 
+                      data-egg-rarity="Épico" 
+                      data-egg-image="./img/ovo4.png"
+                      data-egg-bg="bg-purple-100 dark:bg-purple-900/20">
                 Comprar • 350
               </button>
             </div>
@@ -421,7 +604,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
                 Lendário
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="flamejante"
+                      data-egg-name="Ovo Flamejante" 
+                      data-egg-description="Dragão Vulcânico" 
+                      data-egg-price="500" 
+                      data-egg-rarity="Lendário" 
+                      data-egg-image="./img/ovo5.png"
+                      data-egg-bg="bg-red-100 dark:bg-red-900/20">
                 Comprar • 500
               </button>
             </div>
@@ -440,7 +630,14 @@
               <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400">
                 Celestial
               </span>
-              <button class="px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm">
+              <button class="buy-btn px-3 py-1 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition text-sm"
+                      data-egg-id="cosmico"
+                      data-egg-name="Ovo Cósmico" 
+                      data-egg-description="Deus Estelar" 
+                      data-egg-price="1000" 
+                      data-egg-rarity="Celestial" 
+                      data-egg-image="./img/ovo6.png"
+                      data-egg-bg="bg-indigo-100 dark:bg-indigo-900/20">
                 Comprar • 1,000
               </button>
             </div>
@@ -451,6 +648,217 @@
   </div>
 
   <script>
+    // Sistema de dados
+    const gameData = {
+      coins: 1250,
+      inventory: []
+    };
+
+    // Elementos DOM
+    const userCoinsElement = document.getElementById("user-coins");
+    const inventoryCountElement = document.getElementById("inventory-count");
+    const purchaseModal = document.getElementById("purchase-modal");
+    const toastContainer = document.getElementById("toast-container");
+
+    // Modal elements
+    const modalEggIcon = document.getElementById("modal-egg-icon");
+    const modalEggImage = document.getElementById("modal-egg-image");
+    const modalEggName = document.getElementById("modal-egg-name");
+    const modalEggDescription = document.getElementById("modal-egg-description");
+    const modalEggPrice = document.getElementById("modal-egg-price");
+    const modalCurrentCoins = document.getElementById("modal-current-coins");
+    const modalRemainingCoins = document.getElementById("modal-remaining-coins");
+    const modalCancel = document.getElementById("modal-cancel");
+    const modalConfirm = document.getElementById("modal-confirm");
+
+    let currentEggData = null;
+
+    // Utility Functions
+    function formatCoins(amount) {
+      return amount.toLocaleString('pt-BR');
+    }
+
+    function updateUI() {
+      userCoinsElement.textContent = formatCoins(gameData.coins);
+      inventoryCountElement.textContent = gameData.inventory.length;
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg p-4 ${
+        type === 'success' ? 'border-l-4 border-l-green-500' : 
+        type === 'error' ? 'border-l-4 border-l-red-500' : 
+        'border-l-4 border-l-blue-500'
+      }`;
+      
+      const icon = type === 'success' ? 'ri-check-circle-fill text-green-500' :
+                   type === 'error' ? 'ri-error-warning-fill text-red-500' :
+                   'ri-information-fill text-blue-500';
+      
+      toast.innerHTML = `
+        <div class="flex items-center">
+          <i class="${icon} text-xl mr-3"></i>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900 dark:text-dark-100">${message}</p>
+          </div>
+          <button class="ml-4 text-gray-400 hover:text-gray-600 dark:text-dark-400 dark:hover:text-dark-200" onclick="this.parentElement.parentElement.remove()">
+            <i class="ri-close-line text-lg"></i>
+          </button>
+        </div>
+      `;
+
+      toastContainer.appendChild(toast);
+      
+      // Trigger animation
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      // Auto remove after 4 seconds
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function showModal(eggData) {
+      currentEggData = eggData;
+      const price = parseInt(eggData.price);
+      const remaining = gameData.coins - price;
+      
+      // Populate modal
+      modalEggIcon.className = `flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full mr-4 ${eggData.bg}`;
+      modalEggImage.src = eggData.image;
+      modalEggImage.alt = eggData.name;
+      modalEggName.textContent = eggData.name;
+      modalEggDescription.textContent = eggData.description;
+      modalEggPrice.textContent = formatCoins(price);
+      modalCurrentCoins.textContent = formatCoins(gameData.coins);
+      modalRemainingCoins.textContent = formatCoins(remaining);
+      
+      // Color remaining coins based on affordability
+      if (remaining >= 0) {
+        modalRemainingCoins.className = "font-medium text-green-600 dark:text-green-400";
+        modalConfirm.disabled = false;
+        modalConfirm.className = "flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition";
+      } else {
+        modalRemainingCoins.className = "font-medium text-red-600 dark:text-red-400";
+        modalConfirm.disabled = true;
+        modalConfirm.className = "flex-1 px-4 py-2 bg-gray-400 text-white rounded-md cursor-not-allowed";
+      }
+      
+      purchaseModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideModal() {
+      purchaseModal.classList.add('hidden');
+      document.body.style.overflow = '';
+      currentEggData = null;
+    }
+
+    function processPurchase() {
+      if (!currentEggData) return;
+      
+      const price = parseInt(currentEggData.price);
+      
+      if (gameData.coins < price) {
+        showToast('Moedas insuficientes!', 'error');
+        return;
+      }
+      
+      // Deduct coins
+      gameData.coins -= price;
+      
+      // Add to inventory
+      const eggItem = {
+        id: Date.now(), // Unique ID
+        type: currentEggData.id,
+        name: currentEggData.name,
+        description: currentEggData.description,
+        rarity: currentEggData.rarity,
+        image: currentEggData.image,
+        purchaseDate: new Date().toISOString()
+      };
+      
+      gameData.inventory.push(eggItem);
+      
+      // Update UI
+      updateUI();
+      hideModal();
+      
+      // Show success message
+      showToast(`${currentEggData.name} adicionado ao seu inventário!`, 'success');
+      
+      // Animate coins
+      userCoinsElement.classList.add('coin-bounce');
+      setTimeout(() => userCoinsElement.classList.remove('coin-bounce'), 500);
+      
+      // Animate inventory count
+      inventoryCountElement.classList.add('purchase-success');
+      setTimeout(() => inventoryCountElement.classList.remove('purchase-success'), 600);
+      
+      // Save to localStorage (optional - for persistence)
+      try {
+        localStorage.setItem('zyberonGameData', JSON.stringify(gameData));
+      } catch (e) {
+        console.log('Could not save to localStorage');
+      }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load saved data
+      try {
+        const savedData = localStorage.getItem('zyberonGameData');
+        if (savedData) {
+          Object.assign(gameData, JSON.parse(savedData));
+          updateUI();
+        }
+      } catch (e) {
+        console.log('Could not load from localStorage');
+      }
+      
+      // Purchase buttons
+      document.querySelectorAll('.buy-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Add pulse effect
+          this.classList.add('btn-pulse');
+          setTimeout(() => this.classList.remove('btn-pulse'), 500);
+          
+          const eggData = {
+            id: this.dataset.eggId,
+            name: this.dataset.eggName,
+            description: this.dataset.eggDescription,
+            price: this.dataset.eggPrice,
+            rarity: this.dataset.eggRarity,
+            image: this.dataset.eggImage,
+            bg: this.dataset.eggBg
+          };
+          
+          showModal(eggData);
+        });
+      });
+      
+      // Modal event listeners
+      modalCancel.addEventListener('click', hideModal);
+      modalConfirm.addEventListener('click', processPurchase);
+      
+      // Click outside to close modal
+      purchaseModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          hideModal();
+        }
+      });
+      
+      // Escape key to close modal
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !purchaseModal.classList.contains('hidden')) {
+          hideModal();
+        }
+      });
+    });
+
     // Menu Mobile
     const menuBtn = document.getElementById("menu-btn");
     const closeBtn = document.getElementById("close-btn");
@@ -478,7 +886,7 @@
     const darkModeIcon = document.getElementById("sidebar-dark-mode-icon");
     const html = document.documentElement;
 
-    // Verificar preferência salva ou do sistema
+    // Check saved preference or system preference
     const savedMode = localStorage.getItem("darkMode");
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 
@@ -501,7 +909,7 @@
       }
     });
 
-    // Submenu Settings
+    // Settings Submenu
     const settingsToggle = document.getElementById("settings-toggle");
     const settingsSubmenu = document.getElementById("settings-submenu");
     const settingsArrow = document.getElementById("settings-arrow");
@@ -512,7 +920,7 @@
       settingsArrow.classList.toggle("rotate-180");
     });
 
-    // Fechar ao clicar fora
+    // Close when clicking outside
     document.addEventListener("click", (e) => {
       if (!e.target.closest("#settings-toggle") && !e.target.closest("#settings-submenu")) {
         settingsSubmenu.classList.add("hidden");
@@ -520,7 +928,7 @@
       }
     });
 
-    // Alternância entre Visualizações
+    // View Toggle
     const viewToggle = document.getElementById("view-toggle");
     const viewIcon = document.getElementById("view-icon");
     const tableView = document.getElementById("table-view");
@@ -530,7 +938,7 @@
       tableView.classList.toggle("hidden");
       cardsView.classList.toggle("hidden");
       
-      // Alterna o ícone
+      // Toggle icon
       if (tableView.classList.contains("hidden")) {
         viewIcon.classList.replace("ri-table-line", "ri-layout-grid-line");
       } else {
