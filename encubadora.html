@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zyberon - Encubadora</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              900: '#0A0A0A',
+              800: '#121212',
+              700: '#1E1E1E',
+              600: '#2A2A2A',
+              500: '#3D3D3D',
+              400: '#5E5E5E',
+              300: '#9E9E9E',
+              200: '#D1D1D1',
+              100: '#FFFFFF'
+            },
+            purple: {
+              600: '#7C3AED',
+              700: '#6D28D9'
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'fade-in': 'fadeIn 0.3s ease-in',
+            'hatch': 'hatch 2s ease-in-out',
+            'glow': 'glow 2s ease-in-out infinite',
+            'wiggle': 'wiggle 1s ease-in-out infinite',
+          },
+          keyframes: {
+            bounceIn: {
+              '0%': { transform: 'scale(0.3)', opacity: '0' },
+              '50%': { transform: 'scale(1.05)', opacity: '0.8' },
+              '70%': { transform: 'scale(0.9)', opacity: '0.9' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            hatch: {
+              '0%': { transform: 'scale(1) rotate(0deg)', filter: 'brightness(1)' },
+              '25%': { transform: 'scale(1.1) rotate(-5deg)', filter: 'brightness(1.2)' },
+              '50%': { transform: 'scale(1.15) rotate(5deg)', filter: 'brightness(1.5)' },
+              '75%': { transform: 'scale(1.1) rotate(-3deg)', filter: 'brightness(1.3)' },
+              '100%': { transform: 'scale(1) rotate(0deg)', filter: 'brightness(1)' }
+            },
+            glow: {
+              '0%, 100%': { boxShadow: '0 0 5px rgba(124, 58, 237, 0.5)' },
+              '50%': { boxShadow: '0 0 20px rgba(124, 58, 237, 0.8)' }
+            },
+            wiggle: {
+              '0%, 100%': { transform: 'rotate(-3deg)' },
+              '50%': { transform: 'rotate(3deg)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    .rotate-180 { transform: rotate(180deg); }
+    .hover-underline::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: -2px;
+      left: 0;
+      background-color: currentColor;
+      transition: width 0.3s ease;
+    }
+    .hover-underline:hover::after { width: 100%; }
+    .egg-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    .egg-shadow:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .transition-all-smooth {
+      transition: all 0.3s ease;
+    }
+    .egg-card img {
+      transition: transform 0.3s ease;
+    }
+    .egg-card:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Incubation progress bar */
+    .progress-bar {
+      background: linear-gradient(90deg, #7C3AED 0%, #A855F7 100%);
+      transition: width 0.1s ease;
+    }
+    
+    /* Ready to hatch glow effect */
+    .ready-to-hatch {
+      animation: glow 2s ease-in-out infinite;
+      border: 2px solid #7C3AED;
+    }
+    
+    /* Incubating wiggle effect */
+    .incubating {
+      animation: wiggle 2s ease-in-out infinite;
+    }
+    
+    /* Toast Notification Styles */
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 300px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    /* Modal Backdrop */
+    .modal-backdrop {
+      backdrop-filter: blur(4px);
+    }
+    
+    /* Loading spinner */
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Creature reveal animation */
+    .creature-reveal {
+      animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    /* Empty state illustration */
+    .empty-illustration {
+      opacity: 0.5;
+      filter: grayscale(1);
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-dark-900">
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Modal de Confirmação de Chocagem -->
+  <div id="hatch-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-dark-800 rounded-lg shadow-xl max-w-md w-full animate-bounce-in">
+      <div class="p-6">
+        <div class="flex items-center mb-4">
+          <div id="modal-egg-icon" class="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full mr-4">
+            <img id="modal-egg-image" src="" class="h-10 w-10" alt="">
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-dark-100" id="modal-egg-name"></h3>
+            <p class="text-sm text-gray-600 dark:text-dark-400" id="modal-egg-description"></p>
+          </div>
+        </div>
+        
+        <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 mb-4">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Tempo de incubação:</span>
+            <span class="font-medium text-gray-900 dark:text-dark-100" id="modal-incubation-time">30 segundos</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Raridade esperada:</span>
+            <span class="font-medium" id="modal-expected-rarity"></span>
+          </div>
+        </div>
+        
+        <p class="text-sm text-gray-600 dark:text-dark-400 mb-6">
+          Iniciar a incubação deste ovo? O processo não pode ser cancelado.
+        </p>
+        
+        <div class="flex space-x-3">
+          <button id="modal-cancel" class="flex-1 px-4 py-2 bg-gray-200 dark:bg-dark-600 text-gray-800 dark:text-dark-200 rounded-md hover:bg-gray-300 dark:hover:bg-dark-500 transition">
+            Cancelar
+          </button>
+          <button id="modal-confirm" class="flex-1 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition flex items-center justify-center">
+            <span id="confirm-text">Iniciar Incubação</span>
+            <span id="confirm-spinner" class="loading-spinner hidden ml-2"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Resultado da Chocagem -->
+  <div id="result-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-dark-800 rounded-lg shadow-xl max-w-md w-full animate-bounce-in">
+      <div class="p-6 text-center">
+        <div id="result-creature-icon" class="mx-auto mb-4 creature-reveal">
+          <img id="result-creature-image" src="" class="h-24 w-24 mx-auto" alt="">
+        </div>
+        
+        <h3 class="text-xl font-bold text-gray-900 dark:text-dark-100 mb-2" id="result-creature-name"></h3>
+        <p class="text-gray-600 dark:text-dark-400 mb-4" id="result-creature-description"></p>
+        
+        <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 mb-6">
+          <div class="flex justify-between items-center mb-2">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Raridade:</span>
+            <span id="result-creature-rarity" class="font-medium"></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Tipo:</span>
+            <span id="result-creature-type" class="font-medium text-gray-900 dark:text-dark-100"></span>
+          </div>
+        </div>
+        
+        <button id="result-close" class="w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white dark:bg-dark-800 w-64 min-h-screen flex flex-col shadow-lg fixed top-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
+      <!-- Logo -->
+      <div class="p-6 text-2xl font-bold text-black dark:text-dark-100 flex justify-between items-center">
+        <span class="flex items-center">
+          <i class="ri-dragon-fill text-purple-600 mr-2"></i>
+          Zyberon
+        </span>
+        <button id="close-btn" class="md:hidden p-2">
+          <i class="ri-close-line text-gray-600 dark:text-dark-400 w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- Menu -->
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="./marketplace.html" class="flex items-center gap-3 px-3 py-2 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+          <i class="ri-store-line text-xl"></i>
+          Marketplace
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-dark-700 text-black dark:text-dark-100 font-medium transition-all-smooth">
+          <i class="ri-lightbulb-line text-xl"></i>
+          Encubadora 
+          <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+          <i class="ri-capsule-line text-xl"></i>
+          Meus ovos
+        </a>          
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+          <i class="ri-sword-line text-xl"></i>
+          Batalhas
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+          <i class="ri-gift-line text-xl"></i>
+          Itens para jogo
+        </a>
+      </nav>
+
+      <!-- Bottom Menu -->
+      <div class="mt-auto px-4 space-y-2 mb-6">
+        <!-- Settings com Submenu -->
+        <div class="relative">
+          <a href="#" id="settings-toggle" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+            <i class="ri-settings-3-line text-xl"></i>
+            Configurações
+            <i id="settings-arrow" class="ri-arrow-down-s-line ml-auto transition-transform duration-200"></i>
+          </a>
+          <div id="settings-submenu" class="hidden pl-4 mt-1 space-y-1">
+            <a href="#" class="block px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all-smooth">Perfil</a>
+            <a href="#" id="sidebar-dark-mode-toggle" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all-smooth">
+              <i id="sidebar-dark-mode-icon" class="ri-moon-line text-xl"></i>
+              Modo Escuro
+            </a>
+          </div>
+        </div>
+        
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all-smooth">
+          <i class="ri-logout-box-line text-xl"></i>
+          Sair
+        </a>
+      </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 md:hidden"></div>
+
+    <!-- Conteúdo principal -->
+    <main class="flex-1 p-6 w-full md:ml-64">
+      <div class="flex justify-between items-start mb-6">
+        <div>
+          <button id="menu-btn" class="md:hidden p-2 mr-2" aria-label="Abrir menu">
+            <i class="ri-menu-line text-2xl text-gray-800 dark:text-dark-100"></i>
+          </button>
+          <h1 class="text-3xl font-bold dark:text-dark-100 inline-block">Encubadora</h1>
+          <p class="text-gray-600 dark:text-dark-400 mt-1">Choque seus ovos e descubra novas criaturas!</p>
+        </div>
+        <div class="bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full flex items-center">
+          <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+          <span class="text-sm font-medium text-purple-600 dark:text-purple-400" id="user-coins">1,250</span>
+        </div>
+      </div>
+
+      <!-- Filtros e Controles -->
+      <div class="bg-white dark:bg-dark-800 rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Filtrar por:</label>
+              <select id="filter-select" class="bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded-md px-3 py-1 text-sm text-gray-900 dark:text-dark-100">
+                <option value="all">Todos</option>
+                <option value="ready">Prontos para chocar</option>
+                <option value="incubating">Em incubação</option>
+                <option value="idle">Aguardando</option>
+              </select>
+            </div>
+            <div class="flex items-center gap-2">
+              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Tipo:</label>
+              <select id="type-filter" class="bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded-md px-3 py-1 text-sm text-gray-900 dark:text-dark-100">
+                <option value="all">Todos os tipos</option>
+                <option value="terrestre">Terrestre</option>
+                <option value="aquatico">Aquático</option>
+                <option value="aereo">Aéreo</option>
+                <option value="magico">Mágico</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 dark:text-dark-400">Total de ovos:</span>
+            <span id="total-eggs" class="font-medium text-gray-900 dark:text-dark-100">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Ovos -->
+      <div id="eggs-container" class="space-y-4">
+        <!-- Os ovos serão carregados aqui dinamicamente -->
+      </div>
+
+      <!-- Estado vazio -->
+      <div id="empty-state" class="text-center py-12 hidden">
+        <div class="empty-illustration mb-6">
+          <i class="ri-lightbulb-line text-6xl text-gray-400 dark:text-dark-500"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-dark-100 mb-2">Nenhum ovo no inventário</h3>
+        <p class="text-gray-600 dark:text-dark-400 mb-6">Compre alguns ovos no marketplace para começar a chocar criaturas!</p>
+        <a href="./marketplace.html" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+          <i class="ri-store-line mr-2"></i>
+          Ir para o Marketplace
+        </a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Configuração do JSONBin
+    const JSONBIN_CONFIG = {
+      BIN_ID: '689845a243b1c97be91ac96f', 
+      API_KEY: '$2a$10$qWJ.6NokTFFRL/IaIiPDIuIXijBh53tAL4tHoI4nk3iO1RFwcjS9.', 
+      BASE_URL: 'https://api.jsonbin.io/v3/b'
+    };
+
+    // Sistema de dados
+    const gameData = {
+      coins: 1250,
+      inventory: [],
+      creatures: [], // Novas criaturas chocadas
+      incubations: {}, // Ovos em processo de incubação
+      version: '1.0.0',
+      settings: {
+        darkMode: false,
+        soundEnabled: true
+      }
+    };
+
+    // Configurações de incubação
+    const INCUBATION_CONFIG = {
+      BASE_TIME: 30, // 30 segundos base
+      RARITY_MULTIPLIERS: {
+        'Comum': 1,
+        'Incomum': 1.5,
+        'Raro': 2,
+        'Épico': 3,
+        'Lendário': 4
+      }
+    };
+
+    // Possíveis criaturas que podem nascer
+    const CREATURES_DATABASE = {
+      terrestre: [
+        { name: 'Tartaruga Mística', type: 'terrestre', rarity: 'Comum', image: './img/tartaruga.png', description: 'Uma tartaruga sábia e resistente.' },
+        { name: 'Lobo das Pedras', type: 'terrestre', rarity: 'Incomum', image: './img/lobo.png', description: 'Um lobo feroz com pelagem rochosa.' },
+        { name: 'Urso de Cristal', type: 'terrestre', rarity: 'Raro', image: './img/urso.png', description: 'Um urso majestoso com cristais nas costas.' }
+      ],
+      aquatico: [
+        { name: 'Serpente Marinha', type: 'aquatico', rarity: 'Incomum', image: './img/serpente.png', description: 'Uma serpente elegante dos oceanos.' },
+        { name: 'Polvo Espectral', type: 'aquatico', rarity: 'Raro', image: './img/polvo.png', description: 'Um polvo translúcido com poderes especiais.' },
+        { name: 'Dragão Aquático', type: 'aquatico', rarity: 'Épico', image: './img/dragao_aquatico.png', description: 'Um dragão lendário dos mares profundos.' }
+      ],
+      aereo: [
+        { name: 'Falcão Estelar', type: 'aereo', rarity: 'Comum', image: './img/falcao.png', description: 'Um falcão ágil com penas cintilantes.' },
+        { name: 'Fênix Menor', type: 'aereo', rarity: 'Raro', image: './img/fenix.png', description: 'Uma jovem fênix com chamas douradas.' }
+      ],
+      magico: [
+        { name: 'Espírito da Floresta', type: 'magico', rarity: 'Raro', image: './img/espirito.png', description: 'Um ser mágico protetor da natureza.' },
+        { name: 'Unicórnio Sombrio', type: 'magico', rarity: 'Lendário', image: './img/unicornio.png', description: 'Uma criatura rara com poderes das trevas.' }
+      ]
+    };
+
+    // Sistema de áudio
+    const audioSystem = {
+      enabled: true,
+      volume: 0.2,
+      
+      createBeep(frequency, duration, volume = 0.1, type = 'sine') {
+        try {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+          oscillator.type = type;
+          
+          gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+          gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
+          gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + duration);
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + duration);
+          
+          return new Promise(resolve => {
+            setTimeout(resolve, duration * 1000);
+          });
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      },
+      
+      async playHatchSound() {
+        if (!this.enabled) return;
+        try {
+          // Som de chocagem - sequência mágica
+          this.createBeep(400, 0.1, 0.3, 'sine');
+          setTimeout(() => this.createBeep(600, 0.1, 0.25, 'sine'), 100);
+          setTimeout(() => this.createBeep(800, 0.2, 0.2, 'sine'), 200);
+          setTimeout(() => this.createBeep(1000, 0.3, 0.15, 'sine'), 400);
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      },
+      
+      async playIncubationStart() {
+        if (!this.enabled) return;
+        try {
+          await this.createBeep(500, 0.2, 0.2, 'triangle');
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      },
+      
+      async playClickSound() {
+        if (!this.enabled) return;
+        try {
+          await this.createBeep(600, 0.05, 0.15, 'square');
+        } catch (e) {
+          console.log('Audio not supported');
+        }
+      }
+    };
+
+    // Elementos DOM
+    const userCoinsElement = document.getElementById("user-coins");
+    const inventoryCountElement = document.getElementById("inventory-count");
+    const eggsContainer = document.getElementById("eggs-container");
+    const emptyState = document.getElementById("empty-state");
+    const totalEggsElement = document.getElementById("total-eggs");
+    const filterSelect = document.getElementById("filter-select");
+    const typeFilter = document.getElementById("type-filter");
+    const toastContainer = document.getElementById("toast-container");
+
+    // Modais
+    const hatchModal = document.getElementById("hatch-modal");
+    const resultModal = document.getElementById("result-modal");
+
+    let currentEggData = null;
+    let incubationIntervals = {};
+
+    // Utility Functions
+    function formatCoins(amount) {
+      return amount.toLocaleString('pt-BR');
+    }
+
+    function updateUI() {
+      userCoinsElement.textContent = formatCoins(gameData.coins);
+      inventoryCountElement.textContent = gameData.inventory.length;
+      totalEggsElement.textContent = gameData.inventory.length;
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg p-4 ${
+        type === 'success' ? 'border-l-4 border-l-green-500' : 
+        type === 'error' ? 'border-l-4 border-l-red-500' : 
+        'border-l-4 border-l-blue-500'
+      }`;
+      
+      const icon = type === 'success' ? 'ri-check-circle-fill text-green-500' :
+                   type === 'error' ? 'ri-error-warning-fill text-red-500' :
+                   'ri-information-fill text-blue-500';
+      
+      toast.innerHTML = `
+        <div class="flex items-center">
+          <i class="${icon} text-xl mr-3"></i>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900 dark:text-dark-100">${message}</p>
+          </div>
+          <button class="ml-4 text-gray-400 hover:text-gray-600 dark:text-dark-400 dark:hover:text-dark-200" onclick="this.parentElement.parentElement.remove()">
+            <i class="ri-close-line text-lg"></i>
+          </button>
+        </div>
+      `;
+
+      toastContainer.appendChild(toast);
+      
+      // Trigger animation
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      // Auto remove after 4 seconds
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function getIncubationTime(rarity) {
+      const multiplier = INCUBATION_CONFIG.RARITY_MULTIPLIERS[rarity] || 1;
+      return Math.floor(INCUBATION_CONFIG.BASE_TIME * multiplier);
+    }
+
+    function getRarityColor(rarity) {
+      switch(rarity) {
+        case 'Comum': return 'text-gray-600 dark:text-gray-400';
+        case 'Incomum': return 'text-green-600 dark:text-green-400';
+        case 'Raro': return 'text-blue-600 dark:text-blue-400';
+        case 'Épico': return 'text-purple-600 dark:text-purple-400';
+        case 'Lendário': return 'text-yellow-600 dark:text-yellow-400';
+        default: return 'text-gray-600 dark:text-gray-400';
+      }
+    }
+
+    function getTypeIcon(type) {
+      switch(type) {
+        case 'terrestre': return 'ri-landscape-line';
+        case 'aquatico': return 'ri-drop-line';
+        case 'aereo': return 'ri-flight-takeoff-line';
+        case 'magico': return 'ri-magic-line';
+        default: return 'ri-question-line';
+      }
+    }
+
+    function getEggStatus(eggId) {
+      if (gameData.incubations[eggId]) {
+        const incubation = gameData.incubations[eggId];
+        const now = Date.now();
+        const elapsed = now - incubation.startTime;
+        const totalTime = incubation.totalTime * 1000;
+        
+        if (elapsed >= totalTime) {
+          return 'ready';
+        } else {
+          return 'incubating';
+        }
+      }
+      return 'idle';
+    }
+
+    function renderEggCard(egg) {
+      const status = getEggStatus(egg.id);
+      const incubation = gameData.incubations[egg.id];
+      
+      let statusBadge = '';
+      let statusClass = '';
+      let actionButton = '';
+      let progressBar = '';
+      
+      if (status === 'ready') {
+        statusBadge = '<span class="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">Pronto para chocar!</span>';
+        statusClass = 'ready-to-hatch';
+        actionButton = `
+          <button class="hatch-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md transition flex items-center" 
+                  data-egg-id="${egg.id}">
+            <i class="ri-lightbulb-fill mr-2"></i>
+            Chocar Agora!
+          </button>
+        `;
+      } else if (status === 'incubating') {
+        const elapsed = Date.now() - incubation.startTime;
+        const totalTime = incubation.totalTime * 1000;
+        const progress = Math.min((elapsed / totalTime) * 100, 100);
+        const remainingTime = Math.max(0, Math.ceil((totalTime - elapsed) / 1000));
+        
+        statusBadge = `<span class="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 px-2 py-1 rounded-full text-xs font-medium">Incubando... ${remainingTime}s</span>`;
+        statusClass = 'incubating';
+        progressBar = `
+          <div class="w-full bg-gray-200 dark:bg-dark-600 rounded-full h-2 mb-3">
+            <div class="progress-bar h-2 rounded-full" style="width: ${progress}%" id="progress-${egg.id}"></div>
+          </div>
+        `;
+        actionButton = `
+          <button class="bg-gray-400 text-white px-4 py-2 rounded-md cursor-not-allowed flex items-center" disabled>
+            <i class="ri-time-line mr-2"></i>
+            Em Incubação
+          </button>
+        `;
+      } else {
+        statusBadge = '<span class="bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full text-xs font-medium">Aguardando</span>';
+        actionButton = `
+          <button class="start-incubation-btn bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition flex items-center" 
+                  data-egg-id="${egg.id}"
+                  data-egg-name="${egg.name}"
+                  data-egg-description="${egg.description}"
+                  data-egg-rarity="${egg.rarity}"
+                  data-egg-image="${egg.image}">
+            <i class="ri-play-circle-line mr-2"></i>
+            Iniciar Incubação
+          </button>
+        `;
+      }
+
+      return `
+        <div class="egg-card bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-md transition-all-smooth p-4 ${statusClass}">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+              <div class="relative">
+                <img src="${egg.image}" alt="${egg.name}" class="w-16 h-16 rounded-lg">
+                <div class="absolute -top-1 -right-1">
+                  <i class="${getTypeIcon(egg.type)} text-purple-600 dark:text-purple-400 bg-white dark:bg-dark-700 rounded-full p-1 text-xs"></i>
+                </div>
+              </div>
+              
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="font-semibold text-gray-900 dark:text-dark-100">${egg.name}</h3>
+                  ${statusBadge}
+                </div>
+                <p class="text-sm text-gray-600 dark:text-dark-400 mb-1">${egg.description}</p>
+                <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-dark-500">
+                  <span class="${getRarityColor(egg.rarity)}">${egg.rarity}</span>
+                  <span>Comprado em ${new Date(egg.purchaseDate).toLocaleDateString('pt-BR')}</span>
+                </div>
+                ${progressBar}
+              </div>
+            </div>
+            
+            <div class="flex flex-col items-end space-y-2">
+              ${actionButton}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderEggs() {
+      const filterValue = filterSelect.value;
+      const typeValue = typeFilter.value;
+      
+      let filteredEggs = gameData.inventory;
+      
+      // Filtrar por status
+      if (filterValue !== 'all') {
+        filteredEggs = filteredEggs.filter(egg => {
+          const status = getEggStatus(egg.id);
+          return status === filterValue;
+        });
+      }
+      
+      // Filtrar por tipo
+      if (typeValue !== 'all') {
+        filteredEggs = filteredEggs.filter(egg => egg.type === typeValue);
+      }
+      
+      if (filteredEggs.length === 0) {
+        if (gameData.inventory.length === 0) {
+          emptyState.classList.remove('hidden');
+          eggsContainer.innerHTML = '';
+        } else {
+          emptyState.classList.add('hidden');
+          eggsContainer.innerHTML = `
+            <div class="text-center py-8">
+              <i class="ri-filter-line text-4xl text-gray-400 dark:text-dark-500 mb-4"></i>
+              <h3 class="text-lg font-medium text-gray-900 dark:text-dark-100 mb-2">Nenhum ovo encontrado</h3>
+              <p class="text-gray-600 dark:text-dark-400">Tente alterar os filtros para ver mais ovos.</p>
+            </div>
+          `;
+        }
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      eggsContainer.innerHTML = filteredEggs.map(renderEggCard).join('');
+      
+      // Adicionar event listeners para os botões
+      addEggEventListeners();
+    }
+
+    function addEggEventListeners() {
+      // Botões de iniciar incubação
+      document.querySelectorAll('.start-incubation-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          audioSystem.playClickSound();
+          
+          const eggData = {
+            id: this.dataset.eggId,
+            name: this.dataset.eggName,
+            description: this.dataset.eggDescription,
+            rarity: this.dataset.eggRarity,
+            image: this.dataset.eggImage
+          };
+          
+          showHatchModal(eggData);
+        });
+      });
+      
+      // Botões de chocar
+      document.querySelectorAll('.hatch-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          audioSystem.playClickSound();
+          const eggId = parseInt(this.dataset.eggId);
+          hatchEgg(eggId);
+        });
+      });
+    }
+
+    function showHatchModal(eggData) {
+      currentEggData = eggData;
+      const incubationTime = getIncubationTime(eggData.rarity);
+      
+      document.getElementById('modal-egg-image').src = eggData.image;
+      document.getElementById('modal-egg-name').textContent = eggData.name;
+      document.getElementById('modal-egg-description').textContent = eggData.description;
+      document.getElementById('modal-incubation-time').textContent = `${incubationTime} segundos`;
+      document.getElementById('modal-expected-rarity').textContent = eggData.rarity;
+      document.getElementById('modal-expected-rarity').className = `font-medium ${getRarityColor(eggData.rarity)}`;
+      
+      hatchModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideHatchModal() {
+      hatchModal.classList.add('hidden');
+      document.body.style.overflow = '';
+      currentEggData = null;
+    }
+
+    async function startIncubation() {
+      if (!currentEggData) return;
+      
+      const eggId = parseInt(currentEggData.id);
+      const incubationTime = getIncubationTime(currentEggData.rarity);
+      
+      // Criar registro de incubação
+      gameData.incubations[eggId] = {
+        startTime: Date.now(),
+        totalTime: incubationTime,
+        rarity: currentEggData.rarity
+      };
+      
+      // Salvar dados
+      await jsonbinService.saveGameData();
+      
+      // Play sound
+      audioSystem.playIncubationStart();
+      
+      // Mostrar toast
+      showToast(`${currentEggData.name} começou a incubar!`, 'info');
+      
+      // Fechar modal
+      hideHatchModal();
+      
+      // Re-renderizar
+      renderEggs();
+      
+      // Iniciar timer de progresso
+      startIncubationTimer(eggId);
+    }
+
+    function startIncubationTimer(eggId) {
+      if (incubationIntervals[eggId]) {
+        clearInterval(incubationIntervals[eggId]);
+      }
+      
+      incubationIntervals[eggId] = setInterval(() => {
+        const incubation = gameData.incubations[eggId];
+        if (!incubation) {
+          clearInterval(incubationIntervals[eggId]);
+          return;
+        }
+        
+        const elapsed = Date.now() - incubation.startTime;
+        const totalTime = incubation.totalTime * 1000;
+        const progress = Math.min((elapsed / totalTime) * 100, 100);
+        const remainingTime = Math.max(0, Math.ceil((totalTime - elapsed) / 1000));
+        
+        // Atualizar barra de progresso
+        const progressBar = document.getElementById(`progress-${eggId}`);
+        if (progressBar) {
+          progressBar.style.width = `${progress}%`;
+        }
+        
+        // Atualizar tempo restante
+        const statusBadge = document.querySelector(`[data-egg-id="${eggId}"]`)?.closest('.egg-card')?.querySelector('.bg-yellow-100, .bg-yellow-900\\/30');
+        if (statusBadge && remainingTime > 0) {
+          statusBadge.textContent = `Incubando... ${remainingTime}s`;
+        }
+        
+        // Se terminou a incubação
+        if (elapsed >= totalTime) {
+          clearInterval(incubationIntervals[eggId]);
+          delete incubationIntervals[eggId];
+          
+          // Re-renderizar para mostrar botão de chocar
+          renderEggs();
+          
+          // Mostrar notificação
+          showToast('Um ovo está pronto para ser chocado!', 'success');
+        }
+      }, 1000);
+    }
+
+    function generateCreature(eggType, eggRarity) {
+      const possibleCreatures = CREATURES_DATABASE[eggType] || CREATURES_DATABASE.terrestre;
+      
+      // Lógica de raridade - ovos mais raros têm chance de gerar criaturas mais raras
+      let availableCreatures = possibleCreatures;
+      
+      const rarityWeight = {
+        'Comum': 1,
+        'Incomum': 2,
+        'Raro': 3,
+        'Épico': 4,
+        'Lendário': 5
+      };
+      
+      const eggWeight = rarityWeight[eggRarity] || 1;
+      
+      // Filtrar criaturas baseado na raridade do ovo
+      if (eggWeight >= 3) {
+        // Ovos raros+ podem gerar qualquer coisa
+        availableCreatures = possibleCreatures;
+      } else if (eggWeight >= 2) {
+        // Ovos incomuns podem gerar até raro
+        availableCreatures = possibleCreatures.filter(c => 
+          ['Comum', 'Incomum', 'Raro'].includes(c.rarity)
+        );
+      } else {
+        // Ovos comuns geram principalmente comum/incomum
+        availableCreatures = possibleCreatures.filter(c => 
+          ['Comum', 'Incomum'].includes(c.rarity)
+        );
+      }
+      
+      // Selecionar criatura aleatória
+      const randomIndex = Math.floor(Math.random() * availableCreatures.length);
+      const creature = availableCreatures[randomIndex];
+      
+      return {
+        id: Date.now(),
+        ...creature,
+        hatchDate: new Date().toISOString(),
+        originalEggId: null // Será definido pela função que chama
+      };
+    }
+
+    async function hatchEgg(eggId) {
+      const egg = gameData.inventory.find(e => e.id === eggId);
+      if (!egg) return;
+      
+      const incubation = gameData.incubations[eggId];
+      if (!incubation) return;
+      
+      // Gerar criatura
+      const creature = generateCreature(egg.type, egg.rarity);
+      creature.originalEggId = eggId;
+      
+      // Adicionar à coleção de criaturas
+      if (!gameData.creatures) gameData.creatures = [];
+      gameData.creatures.push(creature);
+      
+      // Remover ovo do inventário
+      gameData.inventory = gameData.inventory.filter(e => e.id !== eggId);
+      
+      // Remover incubação
+      delete gameData.incubations[eggId];
+      if (incubationIntervals[eggId]) {
+        clearInterval(incubationIntervals[eggId]);
+        delete incubationIntervals[eggId];
+      }
+      
+      // Salvar dados
+      await jsonbinService.saveGameData();
+      
+      // Play hatch sound
+      audioSystem.playHatchSound();
+      
+      // Atualizar UI
+      updateUI();
+      renderEggs();
+      
+      // Mostrar resultado
+      showResultModal(creature);
+    }
+
+    function showResultModal(creature) {
+      document.getElementById('result-creature-image').src = creature.image;
+      document.getElementById('result-creature-name').textContent = creature.name;
+      document.getElementById('result-creature-description').textContent = creature.description;
+      document.getElementById('result-creature-rarity').textContent = creature.rarity;
+      document.getElementById('result-creature-rarity').className = `font-medium ${getRarityColor(creature.rarity)}`;
+      document.getElementById('result-creature-type').textContent = creature.type.charAt(0).toUpperCase() + creature.type.slice(1);
+      
+      resultModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideResultModal() {
+      resultModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Integração com JSONBin (mesma do marketplace)
+    const jsonbinService = {
+      async saveGameData() {
+        try {
+          const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Master-Key': JSONBIN_CONFIG.API_KEY,
+              'X-Bin-Versioning': 'false'
+            },
+            body: JSON.stringify(gameData)
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to save data');
+          }
+          
+          console.log('Game data saved to JSONBin');
+          return true;
+        } catch (error) {
+          console.error('Error saving to JSONBin:', error);
+          
+          try {
+            localStorage.setItem('zyberonGameData', JSON.stringify(gameData));
+            console.log('Saved to localStorage as fallback');
+            return true;
+          } catch (e) {
+            console.error('Failed to save to localStorage:', e);
+            return false;
+          }
+        }
+      },
+      
+      async loadGameData() {
+        try {
+          const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+            headers: {
+              'X-Master-Key': JSONBIN_CONFIG.API_KEY
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to load data');
+          }
+          
+          const data = await response.json();
+          
+          if (data.record) {
+            if (data.record.version === gameData.version) {
+              Object.assign(gameData, data.record);
+              
+              // Garantir que estruturas existam
+              if (!gameData.creatures) gameData.creatures = [];
+              if (!gameData.incubations) gameData.incubations = {};
+              
+              console.log('Game data loaded from JSONBin');
+              
+              // Aplicar configurações
+              if (gameData.settings.darkMode) {
+                document.documentElement.classList.add('dark');
+                const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+                if (darkModeIcon) {
+                  darkModeIcon.classList.remove('ri-moon-line');
+                  darkModeIcon.classList.add('ri-sun-line');
+                }
+              }
+              
+              audioSystem.enabled = gameData.settings.soundEnabled;
+              
+              return true;
+            }
+          }
+        } catch (error) {
+          console.error('Error loading from JSONBin:', error);
+          
+          try {
+            const savedData = localStorage.getItem('zyberonGameData');
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              
+              if (parsedData.version === gameData.version) {
+                Object.assign(gameData, parsedData);
+                
+                if (!gameData.creatures) gameData.creatures = [];
+                if (!gameData.incubations) gameData.incubations = {};
+                
+                console.log('Game data loaded from localStorage');
+                
+                if (gameData.settings.darkMode) {
+                  document.documentElement.classList.add('dark');
+                  const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+                  if (darkModeIcon) {
+                    darkModeIcon.classList.remove('ri-moon-line');
+                    darkModeIcon.classList.add('ri-sun-line');
+                  }
+                }
+                
+                audioSystem.enabled = gameData.settings.soundEnabled;
+                
+                return true;
+              }
+            }
+            return false;
+          } catch (e) {
+            console.error('Failed to load from localStorage:', e);
+            return false;
+          }
+        }
+      }
+    };
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Carregar dados salvos
+      const loaded = await jsonbinService.loadGameData();
+      if (loaded) {
+        updateUI();
+        renderEggs();
+        
+        // Reiniciar timers de incubação
+        Object.keys(gameData.incubations).forEach(eggId => {
+          startIncubationTimer(parseInt(eggId));
+        });
+      } else {
+        updateUI();
+        renderEggs();
+      }
+      
+      // Event listeners para filtros
+      filterSelect.addEventListener('change', renderEggs);
+      typeFilter.addEventListener('change', renderEggs);
+      
+      // Event listeners para modais
+      document.getElementById('modal-cancel').addEventListener('click', hideHatchModal);
+      document.getElementById('modal-confirm').addEventListener('click', startIncubation);
+      document.getElementById('result-close').addEventListener('click', hideResultModal);
+      
+      // Fechar modais clicando fora
+      hatchModal.addEventListener('click', function(e) {
+        if (e.target === this) hideHatchModal();
+      });
+      
+      resultModal.addEventListener('click', function(e) {
+        if (e.target === this) hideResultModal();
+      });
+      
+      // Escape para fechar modais
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          if (!hatchModal.classList.contains('hidden')) hideHatchModal();
+          if (!resultModal.classList.contains('hidden')) hideResultModal();
+        }
+      });
+    });
+
+    // Mesmas funções do marketplace para sidebar e configurações
+    const menuBtn = document.getElementById("menu-btn");
+    const closeBtn = document.getElementById("close-btn");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+
+    function openSidebar() {
+      sidebar.classList.remove("-translate-x-full");
+      overlay.classList.remove("hidden");
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+      document.body.style.overflow = '';
+    }
+
+    if (menuBtn) menuBtn.addEventListener("click", openSidebar);
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (overlay) overlay.addEventListener("click", closeSidebar);
+
+    // Dark Mode
+    const darkModeToggle = document.getElementById("sidebar-dark-mode-toggle");
+    const darkModeIcon = document.getElementById("sidebar-dark-mode-icon");
+    const html = document.documentElement;
+
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        html.classList.toggle("dark");
+
+        if (html.classList.contains("dark")) {
+          if (darkModeIcon) {
+            darkModeIcon.classList.remove("ri-moon-line");
+            darkModeIcon.classList.add("ri-sun-line");
+          }
+          gameData.settings.darkMode = true;
+        } else {
+          if (darkModeIcon) {
+            darkModeIcon.classList.remove("ri-sun-line");
+            darkModeIcon.classList.add("ri-moon-line");
+          }
+          gameData.settings.darkMode = false;
+        }
+        
+        jsonbinService.saveGameData();
+      });
+    }
+
+    // Settings Submenu
+    const settingsToggle = document.getElementById("settings-toggle");
+    const settingsSubmenu = document.getElementById("settings-submenu");
+    const settingsArrow = document.getElementById("settings-arrow");
+
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+       
+        if (settingsSubmenu) settingsSubmenu.classList.toggle("hidden");
+        if (settingsArrow) settingsArrow.classList.toggle("rotate-180");
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#settings-toggle") && !e.target.closest("#settings-submenu")) {
+        if (settingsSubmenu) settingsSubmenu.classList.add("hidden");
+        if (settingsArrow) settingsArrow.classList.remove("rotate-180");
+      }
+    });
+  </script>
+</body>
+</html>
