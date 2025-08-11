@@ -324,38 +324,6 @@
         </div>
       </div>
 
-      <!-- Filtros e Controles -->
-      <div class="bg-white dark:bg-dark-800 rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Filtrar por:</label>
-              <select id="filter-select" class="bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded-md px-3 py-1 text-sm text-gray-900 dark:text-dark-100">
-                <option value="all">Todos</option>
-                <option value="ready">Prontos para chocar</option>
-                <option value="incubating">Em incubação</option>
-                <option value="idle">Aguardando</option>
-              </select>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="text-sm font-medium text-gray-700 dark:text-dark-300">Tipo:</label>
-              <select id="type-filter" class="bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded-md px-3 py-1 text-sm text-gray-900 dark:text-dark-100">
-                <option value="all">Todos os tipos</option>
-                <option value="terrestre">Terrestre</option>
-                <option value="aquatico">Aquático</option>
-                <option value="aereo">Aéreo</option>
-                <option value="magico">Mágico</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-600 dark:text-dark-400">Total de ovos:</span>
-            <span id="total-eggs" class="font-medium text-gray-900 dark:text-dark-100">0</span>
-          </div>
-        </div>
-      </div>
-
       <!-- Lista de Ovos -->
       <div id="eggs-container" class="space-y-4">
         <!-- Os ovos serão carregados aqui dinamicamente -->
@@ -368,7 +336,7 @@
         </div>
         <h3 class="text-lg font-medium text-gray-900 dark:text-dark-100 mb-2">Nenhum ovo no inventário</h3>
         <p class="text-gray-600 dark:text-dark-400 mb-6">Compre alguns ovos no marketplace para começar a chocar criaturas!</p>
-        <a href="./marketplace.html" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
+        <a href="./index.html" class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition">
           <i class="ri-store-line mr-2"></i>
           Ir para o Marketplace
         </a>
@@ -500,9 +468,6 @@
     const inventoryCountElement = document.getElementById("inventory-count");
     const eggsContainer = document.getElementById("eggs-container");
     const emptyState = document.getElementById("empty-state");
-    const totalEggsElement = document.getElementById("total-eggs");
-    const filterSelect = document.getElementById("filter-select");
-    const typeFilter = document.getElementById("type-filter");
     const toastContainer = document.getElementById("toast-container");
 
     // Modais
@@ -520,7 +485,6 @@
     function updateUI() {
       userCoinsElement.textContent = formatCoins(gameData.coins);
       inventoryCountElement.textContent = gameData.inventory.length;
-      totalEggsElement.textContent = gameData.inventory.length;
     }
 
     function showToast(message, type = 'success') {
@@ -688,43 +652,14 @@
     }
 
     function renderEggs() {
-      const filterValue = filterSelect.value;
-      const typeValue = typeFilter.value;
-      
-      let filteredEggs = gameData.inventory;
-      
-      // Filtrar por status
-      if (filterValue !== 'all') {
-        filteredEggs = filteredEggs.filter(egg => {
-          const status = getEggStatus(egg.id);
-          return status === filterValue;
-        });
-      }
-      
-      // Filtrar por tipo
-      if (typeValue !== 'all') {
-        filteredEggs = filteredEggs.filter(egg => egg.type === typeValue);
-      }
-      
-      if (filteredEggs.length === 0) {
-        if (gameData.inventory.length === 0) {
-          emptyState.classList.remove('hidden');
-          eggsContainer.innerHTML = '';
-        } else {
-          emptyState.classList.add('hidden');
-          eggsContainer.innerHTML = `
-            <div class="text-center py-8">
-              <i class="ri-filter-line text-4xl text-gray-400 dark:text-dark-500 mb-4"></i>
-              <h3 class="text-lg font-medium text-gray-900 dark:text-dark-100 mb-2">Nenhum ovo encontrado</h3>
-              <p class="text-gray-600 dark:text-dark-400">Tente alterar os filtros para ver mais ovos.</p>
-            </div>
-          `;
-        }
+      if (gameData.inventory.length === 0) {
+        emptyState.classList.remove('hidden');
+        eggsContainer.innerHTML = '';
         return;
       }
       
       emptyState.classList.add('hidden');
-      eggsContainer.innerHTML = filteredEggs.map(renderEggCard).join('');
+      eggsContainer.innerHTML = gameData.inventory.map(renderEggCard).join('');
       
       // Adicionar event listeners para os botões
       addEggEventListeners();
@@ -954,7 +889,7 @@
       document.body.style.overflow = '';
     }
 
-    // Integração com JSONBin (mesma do marketplace)
+    // Integração com JSONBin
     const jsonbinService = {
       async saveGameData() {
         try {
@@ -1011,19 +946,6 @@
               if (!gameData.incubations) gameData.incubations = {};
               
               console.log('Game data loaded from JSONBin');
-              
-              // Aplicar configurações
-              if (gameData.settings.darkMode) {
-                document.documentElement.classList.add('dark');
-                const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
-                if (darkModeIcon) {
-                  darkModeIcon.classList.remove('ri-moon-line');
-                  darkModeIcon.classList.add('ri-sun-line');
-                }
-              }
-              
-              audioSystem.enabled = gameData.settings.soundEnabled;
-              
               return true;
             }
           }
@@ -1042,18 +964,6 @@
                 if (!gameData.incubations) gameData.incubations = {};
                 
                 console.log('Game data loaded from localStorage');
-                
-                if (gameData.settings.darkMode) {
-                  document.documentElement.classList.add('dark');
-                  const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
-                  if (darkModeIcon) {
-                    darkModeIcon.classList.remove('ri-moon-line');
-                    darkModeIcon.classList.add('ri-sun-line');
-                  }
-                }
-                
-                audioSystem.enabled = gameData.settings.soundEnabled;
-                
                 return true;
               }
             }
@@ -1066,11 +976,34 @@
       }
     };
 
+    // Função para aplicar configurações de tema
+    function applyThemeSettings() {
+      const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+      
+      if (gameData.settings.darkMode) {
+        document.documentElement.classList.add('dark');
+        if (darkModeIcon) {
+          darkModeIcon.classList.remove('ri-moon-line');
+          darkModeIcon.classList.add('ri-sun-line');
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (darkModeIcon) {
+          darkModeIcon.classList.remove('ri-sun-line');
+          darkModeIcon.classList.add('ri-moon-line');
+        }
+      }
+      
+      audioSystem.enabled = gameData.settings.soundEnabled;
+    }
+
     // Event Listeners
     document.addEventListener('DOMContentLoaded', async function() {
       // Carregar dados salvos
       const loaded = await jsonbinService.loadGameData();
       if (loaded) {
+        // Aplicar configurações de tema após carregar os dados
+        applyThemeSettings();
         updateUI();
         renderEggs();
         
@@ -1082,10 +1015,6 @@
         updateUI();
         renderEggs();
       }
-      
-      // Event listeners para filtros
-      filterSelect.addEventListener('change', renderEggs);
-      typeFilter.addEventListener('change', renderEggs);
       
       // Event listeners para modais
       document.getElementById('modal-cancel').addEventListener('click', hideHatchModal);
@@ -1110,7 +1039,7 @@
       });
     });
 
-    // Mesmas funções do marketplace para sidebar e configurações
+    // Sidebar e configurações
     const menuBtn = document.getElementById("menu-btn");
     const closeBtn = document.getElementById("close-btn");
     const sidebar = document.getElementById("sidebar");
@@ -1140,22 +1069,14 @@
     if (darkModeToggle) {
       darkModeToggle.addEventListener("click", (e) => {
         e.preventDefault();
-        html.classList.toggle("dark");
-
-        if (html.classList.contains("dark")) {
-          if (darkModeIcon) {
-            darkModeIcon.classList.remove("ri-moon-line");
-            darkModeIcon.classList.add("ri-sun-line");
-          }
-          gameData.settings.darkMode = true;
-        } else {
-          if (darkModeIcon) {
-            darkModeIcon.classList.remove("ri-sun-line");
-            darkModeIcon.classList.add("ri-moon-line");
-          }
-          gameData.settings.darkMode = false;
-        }
         
+        // Alternar dark mode
+        gameData.settings.darkMode = !gameData.settings.darkMode;
+        
+        // Aplicar configurações
+        applyThemeSettings();
+        
+        // Salvar dados
         jsonbinService.saveGameData();
       });
     }
@@ -1182,5 +1103,4 @@
     });
   </script>
 </body>
-
 </html>
