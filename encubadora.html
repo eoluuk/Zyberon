@@ -3,6 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#7C3AED">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Zyberon">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+
   <title>Zyberon - Encubadora</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -1101,6 +1110,56 @@
         if (settingsArrow) settingsArrow.classList.remove("rotate-180");
       }
     });
+
+     // Registro do Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('ServiceWorker registrado com sucesso:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Falha ao registrar ServiceWorker:', error);
+        });
+    });
+  }
+
+   // Evento para instalação do PWA
+   let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Mostrar botão de instalação (opcional)
+    showToast('Zyberon pode ser instalado no seu dispositivo!', 'info');
+    
+    // Você pode adicionar um botão de instalação aqui
+    setTimeout(() => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('Usuário aceitou a instalação');
+          } else {
+            console.log('Usuário recusou a instalação');
+          }
+          deferredPrompt = null;
+        });
+      }
+    }, 3000);
+  });
+
+  // Mostrar splash screen no carregamento
+  window.addEventListener('load', () => {
+    const splash = document.getElementById('pwa-splash');
+    if (splash) {
+      splash.classList.remove('opacity-0');
+      setTimeout(() => {
+        splash.classList.add('opacity-0');
+        setTimeout(() => splash.remove(), 300);
+      }, 1000);
+    }
+  });
   </script>
 </body>
 </html>
