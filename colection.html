@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#7C3AED">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Zyberon">
+  <link rel="apple-touch-icon" href="/icon-192x192.png">
+
+  <title>Zyberon - Coleção de Criaturas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            dark: {
+              900: '#0A0A0A',
+              800: '#121212',
+              700: '#1E1E1E',
+              600: '#2A2A2A',
+              500: '#3D3D3D',
+              400: '#5E5E5E',
+              300: '#9E9E9E',
+              200: '#D1D1D1',
+              100: '#FFFFFF'
+            },
+            purple: {
+              600: '#7C3AED',
+              700: '#6D28D9'
+            }
+          },
+          animation: {
+            'bounce-in': 'bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+            'slide-up': 'slideUp 0.3s ease-out',
+            'fade-in': 'fadeIn 0.3s ease-in',
+            'float': 'float 3s ease-in-out infinite',
+            'shimmer': 'shimmer 2s linear infinite',
+            'glow-pulse': 'glowPulse 2s ease-in-out infinite',
+          },
+          keyframes: {
+            bounceIn: {
+              '0%': { transform: 'scale(0.3)', opacity: '0' },
+              '50%': { transform: 'scale(1.05)', opacity: '0.8' },
+              '70%': { transform: 'scale(0.9)', opacity: '0.9' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            slideUp: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-10px)' }
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            },
+            glowPulse: {
+              '0%, 100%': { boxShadow: '0 0 5px rgba(124, 58, 237, 0.5)' },
+              '50%': { boxShadow: '0 0 20px rgba(124, 58, 237, 0.8)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    .creature-card {
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .creature-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .creature-card img {
+      transition: transform 0.3s ease;
+    }
+    
+    .creature-card:hover img {
+      transform: scale(1.1);
+    }
+    
+    .rarity-glow-common { box-shadow: 0 0 10px rgba(107, 114, 128, 0.3); }
+    .rarity-glow-incomum { box-shadow: 0 0 10px rgba(34, 197, 94, 0.4); }
+    .rarity-glow-raro { box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
+    .rarity-glow-epico { box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+    .rarity-glow-lendario { box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); }
+    
+    .filter-active {
+      background-color: #7C3AED;
+      color: white;
+      transform: translateY(-2px);
+    }
+    
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      min-width: 300px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+    
+    .toast.show {
+      transform: translateX(0);
+    }
+    
+    .modal-backdrop {
+      backdrop-filter: blur(4px);
+    }
+    
+    .shimmer-effect {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .shimmer-effect::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 2s infinite;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    
+    .empty-illustration {
+      opacity: 0.6;
+      filter: grayscale(0.3);
+    }
+
+    /* Navigation improvements */
+    nav a.active {
+      border-left: 4px solid #7C3AED;
+      background-color: rgba(124, 58, 237, 0.1);
+    }
+    nav a:hover {
+      box-shadow: inset 4px 0 0 rgba(124, 58, 237, 0.2);
+    }
+
+    /* Responsive grid */
+    @media (max-width: 640px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-dark-900">
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Modal de Detalhes da Criatura -->
+  <div id="creature-modal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-dark-800 rounded-lg shadow-xl max-w-2xl w-full animate-bounce-in max-h-[90vh] overflow-y-auto">
+      <div class="p-6">
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="text-2xl font-bold text-gray-900 dark:text-dark-100" id="modal-creature-name"></h3>
+          <button id="modal-close" class="text-gray-400 hover:text-gray-600 dark:text-dark-400 dark:hover:text-dark-200 text-2xl">
+            <i class="ri-close-line"></i>
+          </button>
+        </div>
+        
+        <div class="flex flex-col md:flex-row gap-6">
+          <div class="md:w-1/3">
+            <div class="relative">
+              <img id="modal-creature-image" src="" class="w-full h-48 object-cover rounded-lg animate-float" alt="">
+              <div class="absolute top-2 right-2">
+                <span id="modal-creature-rarity-badge" class="px-3 py-1 rounded-full text-sm font-medium"></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="md:w-2/3">
+            <p class="text-gray-600 dark:text-dark-400 mb-4" id="modal-creature-description"></p>
+            
+            <div class="bg-gray-50 dark:bg-dark-700 rounded-lg p-4 mb-4">
+              <h4 class="font-semibold text-gray-900 dark:text-dark-100 mb-3">Informações</h4>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span class="text-gray-600 dark:text-dark-400">Tipo:</span>
+                  <span class="font-medium text-gray-900 dark:text-dark-100 ml-2" id="modal-creature-type"></span>
+                </div>
+                <div>
+                  <span class="text-gray-600 dark:text-dark-400">Raridade:</span>
+                  <span class="font-medium ml-2" id="modal-creature-rarity"></span>
+                </div>
+                <div>
+                  <span class="text-gray-600 dark:text-dark-400">Nascimento:</span>
+                  <span class="font-medium text-gray-900 dark:text-dark-100 ml-2" id="modal-creature-hatch-date"></span>
+                </div>
+                <div>
+                  <span class="text-gray-600 dark:text-dark-400">ID:</span>
+                  <span class="font-medium text-gray-900 dark:text-dark-100 ml-2" id="modal-creature-id"></span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg p-4">
+              <h4 class="font-semibold text-purple-900 dark:text-purple-100 mb-2">Status Especiais</h4>
+              <div class="flex flex-wrap gap-2" id="modal-creature-status">
+                <!-- Status badges will be added here dynamically -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-white dark:bg-dark-800 w-64 min-h-screen flex flex-col shadow-lg fixed top-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
+      <!-- Logo -->
+      <div class="p-6 text-2xl font-bold text-black dark:text-dark-100 flex justify-between items-center">
+        <span class="flex items-center">
+          <i class="ri-dragon-fill text-purple-600 mr-2"></i>
+          Zyberon
+        </span>
+        <button id="close-btn" class="md:hidden p-2">
+          <i class="ri-close-line text-gray-600 dark:text-dark-400 w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- Menu -->
+      <nav class="flex-1 px-4 space-y-2">
+        <a href="./index.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+          <i class="ri-store-line text-xl"></i>
+          Marketplace
+        </a>
+        <a href="./encubadora.html" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+          <i class="ri-lightbulb-line text-xl"></i>
+          Encubadora 
+          <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
+        </a>
+        <a href="#" class="active flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-dark-700 text-black dark:text-dark-100 font-medium transition-all">
+          <i class="ri-dna-line text-xl"></i>
+          Coleção de Criaturas
+        </a>          
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+          <i class="ri-sword-line text-xl"></i>
+          Batalhas
+        </a>
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+          <i class="ri-gift-line text-xl"></i>
+          Itens para jogo
+        </a>
+      </nav>
+
+      <!-- Bottom Menu -->
+      <div class="mt-auto px-4 space-y-2 mb-6">
+        <!-- Settings com Submenu -->
+        <div class="relative">
+          <a href="#" id="settings-toggle" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+            <i class="ri-settings-3-line text-xl"></i>
+            Configurações
+            <i id="settings-arrow" class="ri-arrow-down-s-line ml-auto transition-transform duration-200"></i>
+          </a>
+          <div id="settings-submenu" class="hidden pl-4 mt-1 space-y-1">
+            <a href="#" class="block px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all">Perfil</a>
+            <a href="#" id="sidebar-dark-mode-toggle" title="Alternar modo escuro" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all">
+              <i id="sidebar-dark-mode-icon" class="ri-moon-line text-xl"></i>
+              Modo Escuro
+            </a>
+          </div>
+        </div>
+        
+        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all">
+          <i class="ri-logout-box-line text-xl"></i>
+          Sair
+        </a>
+      </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-40 hidden z-40 md:hidden"></div>
+
+    <!-- Conteúdo principal -->
+    <main class="flex-1 p-6 w-full md:ml-64 overflow-y-auto">
+      <div class="flex flex-col sm:flex-row justify-between items-start mb-6 gap-4">
+        <div class="flex items-center">
+          <button id="menu-btn" title="Abrir menu" class="md:hidden p-2 mr-2" aria-label="Abrir menu">
+            <i class="ri-menu-line text-2xl text-gray-800 dark:text-dark-100"></i>
+          </button>
+          <div>
+            <h1 class="text-3xl font-bold dark:text-dark-100">Coleção de Criaturas</h1>
+            <p class="text-gray-600 dark:text-dark-400 mt-1">Explore suas criaturas nascidas dos ovos!</p>
+          </div>
+        </div>
+        <div class="bg-purple-100 dark:bg-purple-900/30 px-3 py-1 rounded-full flex items-center">
+          <i class="ri-coin-fill text-purple-600 dark:text-purple-400 mr-1"></i>
+          <span class="text-sm font-medium text-purple-600 dark:text-purple-400" id="user-coins">0</span>
+        </div>
+      </div>
+
+      <!-- Estatísticas Rápidas -->
+      <div class="stats-grid mb-8">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-lg shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium opacity-90">Total de Criaturas</h3>
+              <p class="text-3xl font-bold" id="total-creatures">0</p>
+            </div>
+            <i class="ri-dna-line text-4xl opacity-75"></i>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-lg shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium opacity-90">Tipos Únicos</h3>
+              <p class="text-3xl font-bold" id="unique-types">0</p>
+            </div>
+            <i class="ri-landscape-line text-4xl opacity-75"></i>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-lg shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium opacity-90">Criatura Mais Rara</h3>
+              <p class="text-lg font-bold" id="rarest-creature">-</p>
+            </div>
+            <i class="ri-star-line text-4xl opacity-75"></i>
+          </div>
+        </div>
+
+        <div class="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-lg shadow-lg">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-sm font-medium opacity-90">Última Descoberta</h3>
+              <p class="text-lg font-bold" id="latest-discovery">-</p>
+            </div>
+            <i class="ri-time-line text-4xl opacity-75"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros e Busca -->
+      <div class="bg-white dark:bg-dark-800 rounded-lg shadow-sm p-6 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+          <div class="flex flex-wrap gap-2">
+            <span class="text-sm font-medium text-gray-700 dark:text-dark-300 mr-2 self-center">Filtros:</span>
+            <button class="filter-btn px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-dark-600 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all filter-active" data-filter="all">
+              Todas
+            </button>
+            <button class="filter-btn px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-dark-600 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all" data-filter="terrestre">
+              <i class="ri-landscape-line mr-1"></i>Terrestre
+            </button>
+            <button class="filter-btn px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-dark-600 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all" data-filter="aquatico">
+              <i class="ri-drop-line mr-1"></i>Aquático
+            </button>
+            <button class="filter-btn px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-dark-600 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all" data-filter="aereo">
+              <i class="ri-flight-takeoff-line mr-1"></i>Aéreo
+            </button>
+            <button class="filter-btn px-3 py-1 rounded-full text-sm border border-gray-300 dark:border-dark-600 text-gray-600 dark:text-dark-400 hover:bg-gray-100 dark:hover:bg-dark-700 transition-all" data-filter="magico">
+              <i class="ri-magic-line mr-1"></i>Mágico
+            </button>
+          </div>
+          
+          <div class="flex gap-2 w-full lg:w-auto">
+            <div class="relative flex-1 lg:w-64">
+              <i class="ri-search-line absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-400"></i>
+              <input type="text" id="search-input" placeholder="Buscar criaturas..." 
+                     class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100">
+            </div>
+            <select id="sort-select" class="px-4 py-2 border border-gray-300 dark:border-dark-600 rounded-lg bg-white dark:bg-dark-700 text-gray-900 dark:text-dark-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+              <option value="newest">Mais Recentes</option>
+              <option value="oldest">Mais Antigas</option>
+              <option value="name">Nome (A-Z)</option>
+              <option value="rarity">Raridade</option>
+              <option value="type">Tipo</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Criaturas -->
+      <div id="creatures-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        <!-- Criaturas serão renderizadas aqui -->
+      </div>
+
+      <!-- Estado Vazio -->
+      <div id="empty-state" class="hidden text-center py-12">
+        <div class="empty-illustration mb-6">
+          <i class="ri-ghost-line text-8xl text-gray-400 dark:text-dark-500"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-600 dark:text-dark-400 mb-2">Nenhuma criatura encontrada</h3>
+        <p class="text-gray-500 dark:text-dark-500 mb-6">Você ainda não possui criaturas ou não há resultados para sua pesquisa.</p>
+        <a href="./index.html" class="inline-flex items-center px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+          <i class="ri-store-line mr-2"></i>
+          Ir ao Marketplace
+        </a>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-state" class="text-center py-12">
+        <div class="inline-flex items-center px-6 py-3 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg">
+          <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600 dark:border-purple-400 mr-3"></div>
+          Carregando coleção...
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // Configuração do JSONBin
+    const JSONBIN_CONFIG = {
+      BIN_ID: '689845a243b1c97be91ac96f', 
+      API_KEY: '$2a$10$qWJ.6NokTFFRL/IaIiPDIuIXijBh53tAL4tHoI4nk3iO1RFwcjS9.', 
+      BASE_URL: 'https://api.jsonbin.io/v3/b'
+    };
+
+    // Sistema de dados
+    const gameData = {
+      coins: 0,
+      inventory: [],
+      creatures: [],
+      incubations: {},
+      version: '1.0.0',
+      settings: {
+        darkMode: false,
+        soundEnabled: true
+      }
+    };
+
+    // Estado da aplicação
+    let filteredCreatures = [];
+    let currentFilter = 'all';
+    let currentSort = 'newest';
+    let searchQuery = '';
+
+    // Elementos DOM
+    const userCoinsElement = document.getElementById("user-coins");
+    const inventoryCountElement = document.getElementById("inventory-count");
+    const creaturesContainer = document.getElementById("creatures-container");
+    const emptyState = document.getElementById("empty-state");
+    const loadingState = document.getElementById("loading-state");
+    const toastContainer = document.getElementById("toast-container");
+    const creatureModal = document.getElementById("creature-modal");
+    const searchInput = document.getElementById("search-input");
+    const sortSelect = document.getElementById("sort-select");
+
+    // Utility Functions
+    function formatCoins(amount) {
+      return amount.toLocaleString('pt-BR');
+    }
+
+    function updateUI() {
+      userCoinsElement.textContent = formatCoins(gameData.coins);
+      inventoryCountElement.textContent = gameData.inventory.length;
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast bg-white dark:bg-dark-800 border border-gray-200 dark:border-dark-600 rounded-lg shadow-lg p-4 ${
+        type === 'success' ? 'border-l-4 border-l-green-500' : 
+        type === 'error' ? 'border-l-4 border-l-red-500' : 
+        'border-l-4 border-l-blue-500'
+      }`;
+      
+      const icon = type === 'success' ? 'ri-check-circle-fill text-green-500' :
+                   type === 'error' ? 'ri-error-warning-fill text-red-500' :
+                   'ri-information-fill text-blue-500';
+      
+      toast.innerHTML = `
+        <div class="flex items-center">
+          <i class="${icon} text-xl mr-3"></i>
+          <div class="flex-1">
+            <p class="text-sm font-medium text-gray-900 dark:text-dark-100">${message}</p>
+          </div>
+          <button class="ml-4 text-gray-400 hover:text-gray-600 dark:text-dark-400 dark:hover:text-dark-200" onclick="this.parentElement.parentElement.remove()">
+            <i class="ri-close-line text-lg"></i>
+          </button>
+        </div>
+      `;
+
+      toastContainer.appendChild(toast);
+      
+      setTimeout(() => toast.classList.add('show'), 100);
+      
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    function getRarityColor(rarity) {
+      switch(rarity.toLowerCase()) {
+        case 'comum': return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
+        case 'incomum': return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+        case 'raro': return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+        case 'épico': return 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30';
+        case 'lendário': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+        default: return 'text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800';
+      }
+    }
+
+    function getRarityGlow(rarity) {
+      switch(rarity.toLowerCase()) {
+        case 'comum': return 'rarity-glow-common';
+        case 'incomum': return 'rarity-glow-incomum';
+        case 'raro': return 'rarity-glow-raro';
+        case 'épico': return 'rarity-glow-epico';
+        case 'lendário': return 'rarity-glow-lendario';
+        default: return 'rarity-glow-common';
+      }
+    }
+
+    function getTypeIcon(type) {
+      switch(type.toLowerCase()) {
+        case 'terrestre': return 'ri-landscape-line';
+        case 'aquatico': return 'ri-drop-line';
+        case 'aereo': return 'ri-flight-takeoff-line';
+        case 'magico': return 'ri-magic-line';
+        case 'solar': return 'ri-sun-line';
+        default: return 'ri-question-line';
+      }
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function calculateCreatureAge(hatchDate) {
+      const now = new Date();
+      const hatch = new Date(hatchDate);
+      const diffTime = Math.abs(now - hatch);
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) {
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        if (diffHours === 0) {
+          const diffMinutes = Math.floor(diffTime / (1000 * 60));
+          return `${diffMinutes} min`;
+        }
+        return `${diffHours}h`;
+      }
+      return `${diffDays}d`;
+    }
+
+    function updateStats() {
+      const creatures = gameData.creatures || [];
+      
+      // Total de criaturas
+      document.getElementById('total-creatures').textContent = creatures.length;
+      
+      // Tipos únicos
+      const uniqueTypes = [...new Set(creatures.map(c => c.type))];
+      document.getElementById('unique-types').textContent = uniqueTypes.length;
+      
+      // Criatura mais rara
+      const rarityOrder = ['comum', 'incomum', 'raro', 'épico', 'lendário'];
+      const rarestCreature = creatures.reduce((rarest, current) => {
+        if (!rarest) return current;
+        const currentRarityIndex = rarityOrder.indexOf(current.rarity.toLowerCase());
+        const rarestRarityIndex = rarityOrder.indexOf(rarest.rarity.toLowerCase());
+        return currentRarityIndex > rarestRarityIndex ? current : rarest;
+      }, null);
+      
+      document.getElementById('rarest-creature').textContent = 
+        rarestCreature ? `${rarestCreature.name} (${rarestCreature.rarity})` : '-';
+      
+      // Última descoberta
+      const latestCreature = creatures.sort((a, b) => new Date(b.hatchDate) - new Date(a.hatchDate))[0];
+      document.getElementById('latest-discovery').textContent = 
+        latestCreature ? `${latestCreature.name} (${calculateCreatureAge(latestCreature.hatchDate)})` : '-';
+    }
+
+    function renderCreatureCard(creature) {
+      const rarityColorClasses = getRarityColor(creature.rarity);
+      const rarityGlow = getRarityGlow(creature.rarity);
+      const typeIcon = getTypeIcon(creature.type);
+      const age = calculateCreatureAge(creature.hatchDate);
+      
+      // Gerar status especiais baseados na criatura
+      const statuses = [];
+      if (age.includes('d') && parseInt(age) > 7) {
+        statuses.push({ text: 'Veterana', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' });
+      }
+      if (creature.rarity.toLowerCase() === 'lendário') {
+        statuses.push({ text: 'Lendária', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' });
+      }
+      if (creature.rarity.toLowerCase() === 'épico') {
+        statuses.push({ text: 'Épica', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300' });
+      }
+      
+      // Primeira criatura desse tipo
+      const isFirstOfType = gameData.creatures.filter(c => c.type === creature.type)[0]?.id === creature.id;
+      if (isFirstOfType) {
+        statuses.push({ text: 'Pioneira', class: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' });
+      }
+
+      return `
+        <div class="creature-card bg-white dark:bg-dark-800 rounded-lg shadow-sm hover:shadow-lg transition-all cursor-pointer ${rarityGlow}"
+             data-creature-id="${creature.id}">
+          <div class="relative overflow-hidden rounded-t-lg">
+            <img src="${creature.image}" alt="${creature.name}" 
+                 class="w-full h-48 object-cover">
+            <div class="absolute top-3 right-3">
+              <span class="px-2 py-1 rounded-full text-xs font-medium ${rarityColorClasses}">
+                ${creature.rarity}
+              </span>
+            </div>
+            <div class="absolute top-3 left-3">
+              <div class="bg-white dark:bg-dark-800 rounded-full p-2 shadow-sm">
+                <i class="${typeIcon} text-purple-600 dark:text-purple-400"></i>
+              </div>
+            </div>
+            <div class="absolute bottom-3 right-3">
+              <span class="bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded-full">
+                ${age}
+              </span>
+            </div>
+          </div>
+          
+          <div class="p-4">
+            <h3 class="font-semibold text-lg text-gray-900 dark:text-dark-100 mb-1 truncate">
+              ${creature.name}
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-dark-400 mb-3 line-clamp-2">
+              ${creature.description}
+            </p>
+            
+            <div class="flex items-center justify-between text-sm text-gray-500 dark:text-dark-500 mb-3">
+              <span class="capitalize">${creature.type}</span>
+              <span>ID: ${creature.id}</span>
+            </div>
+            
+            ${statuses.length > 0 ? `
+              <div class="flex flex-wrap gap-1 mb-3">
+                ${statuses.map(status => `
+                  <span class="text-xs px-2 py-1 rounded-full ${status.class}">
+                    ${status.text}
+                  </span>
+                `).join('')}
+              </div>
+            ` : ''}
+            
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-400 dark:text-dark-500">
+                Nascida em ${formatDate(creature.hatchDate)}
+              </span>
+              <button class="view-creature-btn text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 text-sm font-medium"
+                      data-creature-id="${creature.id}">
+                Ver Detalhes
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function applyFiltersAndSort() {
+      let creatures = [...(gameData.creatures || [])];
+      
+      // Aplicar filtro de tipo
+      if (currentFilter !== 'all') {
+        creatures = creatures.filter(creature => creature.type.toLowerCase() === currentFilter);
+      }
+      
+      // Aplicar busca
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        creatures = creatures.filter(creature => 
+          creature.name.toLowerCase().includes(query) ||
+          creature.description.toLowerCase().includes(query) ||
+          creature.rarity.toLowerCase().includes(query) ||
+          creature.type.toLowerCase().includes(query)
+        );
+      }
+      
+      // Aplicar ordenação
+      switch (currentSort) {
+        case 'newest':
+          creatures.sort((a, b) => new Date(b.hatchDate) - new Date(a.hatchDate));
+          break;
+        case 'oldest':
+          creatures.sort((a, b) => new Date(a.hatchDate) - new Date(b.hatchDate));
+          break;
+        case 'name':
+          creatures.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case 'rarity':
+          const rarityOrder = { 'lendário': 5, 'épico': 4, 'raro': 3, 'incomum': 2, 'comum': 1 };
+          creatures.sort((a, b) => 
+            (rarityOrder[b.rarity.toLowerCase()] || 0) - (rarityOrder[a.rarity.toLowerCase()] || 0)
+          );
+          break;
+        case 'type':
+          creatures.sort((a, b) => a.type.localeCompare(b.type));
+          break;
+      }
+      
+      filteredCreatures = creatures;
+      renderCreatures();
+    }
+
+    function renderCreatures() {
+      loadingState.classList.add('hidden');
+      
+      if (filteredCreatures.length === 0) {
+        creaturesContainer.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      creaturesContainer.innerHTML = filteredCreatures.map(renderCreatureCard).join('');
+      
+      // Adicionar event listeners
+      addCreatureEventListeners();
+    }
+
+    function addCreatureEventListeners() {
+      // Cards clicáveis
+      document.querySelectorAll('.creature-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+          if (!e.target.closest('.view-creature-btn')) {
+            const creatureId = parseInt(this.dataset.creatureId);
+            showCreatureModal(creatureId);
+          }
+        });
+      });
+      
+      // Botões de ver detalhes
+      document.querySelectorAll('.view-creature-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const creatureId = parseInt(this.dataset.creatureId);
+          showCreatureModal(creatureId);
+        });
+      });
+    }
+
+    function showCreatureModal(creatureId) {
+      const creature = gameData.creatures.find(c => c.id === creatureId);
+      if (!creature) return;
+      
+      document.getElementById('modal-creature-name').textContent = creature.name;
+      document.getElementById('modal-creature-image').src = creature.image;
+      document.getElementById('modal-creature-description').textContent = creature.description;
+      document.getElementById('modal-creature-type').textContent = creature.type.charAt(0).toUpperCase() + creature.type.slice(1);
+      document.getElementById('modal-creature-rarity').textContent = creature.rarity;
+      document.getElementById('modal-creature-rarity').className = getRarityColor(creature.rarity).replace('bg-', 'text-').split(' ')[0];
+      document.getElementById('modal-creature-hatch-date').textContent = formatDate(creature.hatchDate);
+      document.getElementById('modal-creature-id').textContent = creature.id;
+      
+      // Badge de raridade
+      const rarityBadge = document.getElementById('modal-creature-rarity-badge');
+      rarityBadge.textContent = creature.rarity;
+      rarityBadge.className = `px-3 py-1 rounded-full text-sm font-medium ${getRarityColor(creature.rarity)}`;
+      
+      // Status especiais
+      const statusContainer = document.getElementById('modal-creature-status');
+      const age = calculateCreatureAge(creature.hatchDate);
+      const statuses = [];
+      
+      if (age.includes('d') && parseInt(age) > 7) {
+        statuses.push({ text: 'Veterana', class: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300', desc: 'Mais de 7 dias de vida' });
+      }
+      if (creature.rarity.toLowerCase() === 'lendário') {
+        statuses.push({ text: 'Lendária', class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300', desc: 'Criatura de raridade máxima' });
+      }
+      if (creature.rarity.toLowerCase() === 'épico') {
+        statuses.push({ text: 'Épica', class: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300', desc: 'Criatura muito rara' });
+      }
+      
+      const isFirstOfType = gameData.creatures.filter(c => c.type === creature.type)[0]?.id === creature.id;
+      if (isFirstOfType) {
+        statuses.push({ text: 'Pioneira', class: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300', desc: 'Primeira criatura deste tipo' });
+      }
+      
+      if (statuses.length === 0) {
+        statuses.push({ text: 'Padrão', class: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', desc: 'Criatura normal' });
+      }
+      
+      statusContainer.innerHTML = statuses.map(status => `
+        <span class="text-sm px-3 py-1 rounded-full ${status.class}" title="${status.desc}">
+          ${status.text}
+        </span>
+      `).join('');
+      
+      creatureModal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideCreatureModal() {
+      creatureModal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Integração com JSONBin
+    const jsonbinService = {
+      async loadGameData() {
+        try {
+          const response = await fetch(`${JSONBIN_CONFIG.BASE_URL}/${JSONBIN_CONFIG.BIN_ID}/latest`, {
+            headers: {
+              'X-Master-Key': JSONBIN_CONFIG.API_KEY
+            }
+          });
+          
+          if (!response.ok) {
+            throw new Error('Failed to load data');
+          }
+          
+          const data = await response.json();
+          
+          if (data.record) {
+            Object.assign(gameData, data.record);
+            
+            // Garantir que estruturas existam
+            if (!gameData.creatures) gameData.creatures = [];
+            if (!gameData.incubations) gameData.incubations = {};
+            if (!gameData.inventory) gameData.inventory = [];
+            
+            console.log('Game data loaded from JSONBin');
+            return true;
+          }
+        } catch (error) {
+          console.error('Error loading from JSONBin:', error);
+          
+          try {
+            const savedData = localStorage.getItem('zyberonGameData');
+            if (savedData) {
+              const parsedData = JSON.parse(savedData);
+              Object.assign(gameData, parsedData);
+              
+              if (!gameData.creatures) gameData.creatures = [];
+              if (!gameData.incubations) gameData.incubations = {};
+              if (!gameData.inventory) gameData.inventory = [];
+              
+              console.log('Game data loaded from localStorage');
+              return true;
+            }
+            return false;
+          } catch (e) {
+            console.error('Failed to load from localStorage:', e);
+            return false;
+          }
+        }
+      }
+    };
+
+    // Função para aplicar configurações de tema
+    function applyThemeSettings() {
+      const darkModeIcon = document.getElementById('sidebar-dark-mode-icon');
+      
+      if (gameData.settings && gameData.settings.darkMode) {
+        document.documentElement.classList.add('dark');
+        if (darkModeIcon) {
+          darkModeIcon.classList.remove('ri-moon-line');
+          darkModeIcon.classList.add('ri-sun-line');
+        }
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (darkModeIcon) {
+          darkModeIcon.classList.remove('ri-sun-line');
+          darkModeIcon.classList.add('ri-moon-line');
+        }
+      }
+    }
+
+    // Event Listeners
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Mostrar loading
+      loadingState.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+      
+      // Carregar dados salvos
+      const loaded = await jsonbinService.loadGameData();
+      if (loaded) {
+        applyThemeSettings();
+        updateUI();
+        updateStats();
+        applyFiltersAndSort();
+      } else {
+        loadingState.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      }
+      
+      // Event listeners para filtros
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          // Remover active de todos
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('filter-active'));
+          // Adicionar active no clicado
+          this.classList.add('filter-active');
+          
+          currentFilter = this.dataset.filter;
+          applyFiltersAndSort();
+        });
+      });
+      
+      // Event listener para busca
+      searchInput.addEventListener('input', function() {
+        searchQuery = this.value;
+        applyFiltersAndSort();
+      });
+      
+      // Event listener para ordenação
+      sortSelect.addEventListener('change', function() {
+        currentSort = this.value;
+        applyFiltersAndSort();
+      });
+      
+      // Event listeners para modal
+      document.getElementById('modal-close').addEventListener('click', hideCreatureModal);
+      
+      // Fechar modal clicando fora
+      creatureModal.addEventListener('click', function(e) {
+        if (e.target === this) hideCreatureModal();
+      });
+      
+      // Escape para fechar modal
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          if (!creatureModal.classList.contains('hidden')) hideCreatureModal();
+        }
+      });
+    });
+
+    // Sidebar e configurações
+    const menuBtn = document.getElementById("menu-btn");
+    const closeBtn = document.getElementById("close-btn");
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("overlay");
+
+    function openSidebar() {
+      sidebar.classList.remove("-translate-x-full");
+      overlay.classList.remove("hidden");
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add("-translate-x-full");
+      overlay.classList.add("hidden");
+      document.body.style.overflow = '';
+    }
+
+    if (menuBtn) menuBtn.addEventListener("click", openSidebar);
+    if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
+    if (overlay) overlay.addEventListener("click", closeSidebar);
+
+    // Dark Mode
+    const darkModeToggle = document.getElementById("sidebar-dark-mode-toggle");
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        
+        // Alternar dark mode
+        if (gameData.settings) {
+          gameData.settings.darkMode = !gameData.settings.darkMode;
+        } else {
+          gameData.settings = { darkMode: true, soundEnabled: true };
+        }
+        
+        // Aplicar configurações
+        applyThemeSettings();
+        
+        showToast('Tema alterado com sucesso!', 'success');
+      });
+    }
+
+    // Settings Submenu
+    const settingsToggle = document.getElementById("settings-toggle");
+    const settingsSubmenu = document.getElementById("settings-submenu");
+    const settingsArrow = document.getElementById("settings-arrow");
+
+    if (settingsToggle) {
+      settingsToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+       
+        if (settingsSubmenu) settingsSubmenu.classList.toggle("hidden");
+        if (settingsArrow) settingsArrow.classList.toggle("rotate-180");
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#settings-toggle") && !e.target.closest("#settings-submenu")) {
+        if (settingsSubmenu) settingsSubmenu.classList.add("hidden");
+        if (settingsArrow) settingsArrow.classList.remove("rotate-180");
+      }
+    });
+  </script>
+</body>
+</html>
