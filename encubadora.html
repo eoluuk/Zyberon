@@ -173,7 +173,57 @@
       opacity: 0.5;
       filter: grayscale(1);
     }
-  </style>
+  
+/* ===== Melhorias Visuais e de UX ===== */
+
+/* Transições suaves para troca de views */
+#table-view, #cards-view {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+#table-view.show, #cards-view.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Item ativo no menu */
+nav a.active {
+  border-left: 4px solid #7C3AED;
+  background-color: rgba(124, 58, 237, 0.1);
+}
+nav a:hover {
+  box-shadow: inset 4px 0 0 rgba(124, 58, 237, 0.2);
+}
+
+/* Animação flutuante no ovo do modal */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+#modal-egg-image {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Glow nas raridades */
+.bg-green-100 { box-shadow: 0 0 8px rgba(16, 185, 129, 0.3); }
+.bg-blue-100 { box-shadow: 0 0 8px rgba(59, 130, 246, 0.3); }
+.bg-yellow-100 { box-shadow: 0 0 8px rgba(234, 179, 8, 0.3); }
+.bg-purple-100 { box-shadow: 0 0 8px rgba(139, 92, 246, 0.3); }
+.bg-red-100 { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3); }
+.bg-indigo-100 { box-shadow: 0 0 8px rgba(99, 102, 241, 0.3); }
+
+/* Glow em moedas e inventário */
+@keyframes glow {
+  0% { box-shadow: 0 0 0 rgba(124, 58, 237, 0); }
+  50% { box-shadow: 0 0 10px rgba(124, 58, 237, 0.8); }
+  100% { box-shadow: 0 0 0 rgba(124, 58, 237, 0); }
+}
+#user-coins.glow, #inventory-count.glow {
+  animation: glow 0.8s ease;
+}
+
+</style>
 </head>
 <body class="bg-gray-100 dark:bg-dark-900">
   <!-- Toast Container -->
@@ -226,7 +276,7 @@
     <div class="bg-white dark:bg-dark-800 rounded-lg shadow-xl max-w-md w-full animate-bounce-in">
       <div class="p-6 text-center">
         <div id="result-creature-icon" class="mx-auto mb-4 creature-reveal">
-          <img id="result-creature-image" src="" class="h-24 w-24 mx-auto" alt="">
+          <img id="result-creature-image" src="./img/comum/comum.jpg" class="h-24 w-24 mx-auto" alt="">
         </div>
         
         <h3 class="text-xl font-bold text-gray-900 dark:text-dark-100 mb-2" id="result-creature-name"></h3>
@@ -270,7 +320,7 @@
           <i class="ri-store-line text-xl"></i>
           Marketplace
         </a>
-        <a href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-dark-700 text-black dark:text-dark-100 font-medium transition-all-smooth">
+        <a href="#" class="active flex items-center gap-3 px-3 py-2 rounded-lg bg-gray-100 dark:bg-dark-700 text-black dark:text-dark-100 font-medium transition-all-smooth">
           <i class="ri-lightbulb-line text-xl"></i>
           Encubadora 
           <span id="inventory-count" class="ml-auto bg-purple-600 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">0</span>
@@ -300,7 +350,7 @@
           </a>
           <div id="settings-submenu" class="hidden pl-4 mt-1 space-y-1">
             <a href="#" class="block px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all-smooth">Perfil</a>
-            <a href="#" id="sidebar-dark-mode-toggle" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all-smooth">
+            <a href="#" id="sidebar-dark-mode-toggle" title="Alternar modo escuro" class="flex items-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-dark-400 hover:bg-gray-50 dark:hover:bg-dark-600 transition-all-smooth">
               <i id="sidebar-dark-mode-icon" class="ri-moon-line text-xl"></i>
               Modo Escuro
             </a>
@@ -321,7 +371,7 @@
     <main class="flex-1 p-6 w-full md:ml-64">
       <div class="flex justify-between items-start mb-6">
         <div>
-          <button id="menu-btn" class="md:hidden p-2 mr-2" aria-label="Abrir menu">
+          <button id="menu-btn" title="Abrir menu" class="md:hidden p-2 mr-2" aria-label="Abrir menu">
             <i class="ri-menu-line text-2xl text-gray-800 dark:text-dark-100"></i>
           </button>
           <h1 class="text-3xl font-bold dark:text-dark-100 inline-block">Encubadora</h1>
@@ -389,7 +439,7 @@
     // Possíveis criaturas que podem nascer
     const CREATURES_DATABASE = {
       terrestre: [
-        { name: 'Tartaruga Mística', type: 'terrestre', rarity: 'Comum', image: './img/tartaruga.png', description: 'Uma tartaruga sábia e resistente.' },
+        { name: 'Tartaruga Mística', type: 'terrestre', rarity: 'Comum', image: './img/comum/comum.jpg', description: 'Uma tartaruga sábia e resistente.' },
         { name: 'Lobo das Pedras', type: 'terrestre', rarity: 'Incomum', image: './img/lobo.png', description: 'Um lobo feroz com pelagem rochosa.' },
         { name: 'Urso de Cristal', type: 'terrestre', rarity: 'Raro', image: './img/urso.png', description: 'Um urso majestoso com cristais nas costas.' }
       ],
@@ -485,6 +535,18 @@
 
     let currentEggData = null;
     let incubationIntervals = {};
+
+    
+// Aplicar animação glow em moedas e inventário quando atualiza
+function animateCounters() {
+  userCoinsElement.classList.add('glow');
+  inventoryCountElement.classList.add('glow');
+  setTimeout(() => {
+    userCoinsElement.classList.remove('glow');
+    inventoryCountElement.classList.remove('glow');
+  }, 800);
+}
+
 
     // Utility Functions
     function formatCoins(amount) {
@@ -1125,7 +1187,7 @@
   }
 
    // Evento para instalação do PWA
-   let deferredPrompt;
+  let deferredPrompt;
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
